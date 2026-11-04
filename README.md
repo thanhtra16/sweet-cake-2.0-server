@@ -78,14 +78,6 @@ npm run dev
 
 Hoặc sử dụng script chạy tương ứng được khai báo trong `package.json`.
 
-Địa chỉ server mặc định dự kiến:
-
-```text
-http://localhost:3000
-```
-
-*Lưu ý: Port thực tế phụ thuộc vào cấu hình của dự án.*
-
 ## 6. Quy ước làm việc với Git
 
 ### 6.1. Quy ước đặt tên nhánh (Branch Naming)
@@ -174,21 +166,13 @@ docs(readme): cap nhat huong dan cai dat
 Các thành viên thực hiện Pull Request để tích hợp code vào nhánh `dev`.
 
 **Quy trình thực hiện:**
+1. Cập nhật code mới nhất từ nhánh dev.
+2. Tạo nhánh chức năng và tiến hành phát triển.
+3. Commit và push code lên GitHub.
+4. Tạo Pull Request từ nhánh chức năng vào dev.
+Quy định:
+- Không push trực tiếp lên nhánh main hoặc dev.
 
-1. Cập nhật code mới nhất từ nhánh `dev`.
-2. Tạo nhánh chức năng mới từ `dev`.
-3. Phát triển chức năng và kiểm tra code.
-4. Commit các thay đổi theo đúng quy ước.
-5. Push nhánh chức năng lên GitHub.
-6. Tạo Pull Request từ nhánh chức năng vào `dev`.
-7. Kiểm tra lại nội dung thay đổi và mô tả Pull Request.
-8. Tiến hành merge sau khi hoàn tất kiểm tra.
-
-**Quy định:**
-
-- Không push trực tiếp lên nhánh `main` hoặc `dev`.
-- Kiểm tra code trước khi tạo Pull Request.
-- Đảm bảo các thay đổi hoạt động đúng trước khi merge.
 
 ### 6.4. Ví dụ quy trình làm việc
 
@@ -200,32 +184,26 @@ Ví dụ: Phát triển chức năng đăng nhập bằng JWT.
 git checkout dev
 git pull origin dev
 ```
-
 **Bước 2: Tạo nhánh chức năng**
 
 ```bash
 git checkout -b feature/dang-nhap-jwt
 ```
-
 **Bước 3: Thực hiện code và commit**
 
 ```bash
 git add .
 git commit -m "feat(auth): them API dang nhap"
 ```
-
 **Bước 4: Push nhánh lên GitHub**
 
 ```bash
 git push -u origin feature/dang-nhap-jwt
 ```
-
 **Bước 5: Tạo Pull Request trên GitHub**
-
 - **Base:** `dev`
 - **Compare:** `feature/dang-nhap-jwt`
-
-Sau khi kiểm tra các thay đổi, tiến hành merge Pull Request vào nhánh `dev`.
+.
 
 ## 7. Quy tắc chung
 
