@@ -37,7 +37,7 @@ const CANCEL_CAUSES = ['shop_fault', 'other']; // BR21
  */
 const TRANSITIONS = {
   [S.PENDING_PAYMENT]: {
-    [S.PENDING_APPROVAL]: { actors: [ACTOR.SYSTEM, ACTOR.ADMIN] }, // Admin xác nhận thủ công hoặc webhook mô phỏng (BR16)
+    [S.PENDING_APPROVAL]: { actors: [ACTOR.SYSTEM, ACTOR.ADMIN], isPaid: true }, // Admin xác nhận thủ công hoặc webhook mô phỏng (BR16)
     [S.CANCELLED]: { actors: [ACTOR.CUSTOMER, ACTOR.SYSTEM] },
   },
   [S.PENDING_APPROVAL]: {
