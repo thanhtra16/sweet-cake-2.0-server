@@ -152,6 +152,9 @@ function planTransition(order, to, opts = {}) {
   // 4. Yêu cầu hủy đang chờ: Admin phải xử lý trước khi chuyển trạng thái (BR19, BR20).
   const pendingCancel = order.cancelRequest && order.cancelRequest.status === 'pending';
   if (via === 'cancel_request') {
+    if (actor.type !== ACTOR.ADMIN) {
+      throw new AppError(403, 'FORBIDDEN', 'Chỉ Admin mới có quyền xử lý yêu cầu hủy của khách hàng.', { from, to });
+    }
     if (!pendingCancel || to !== S.CANCELLED) {
       throw new AppError(409, 'INVALID_TRANSITION', 'Đơn không có yêu cầu hủy đang chờ xử lý.', { from, to });
     }
