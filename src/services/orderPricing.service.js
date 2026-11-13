@@ -1,6 +1,6 @@
 // ví dụ phần kiểm tra sản phẩm và tính giá cơ bản; các quy tắc chi tiết về size, nhân, màu kem, độ ngọt cần đối chiếu cấu hình và quy tắc BR của dự án.
-const Product = require("../models/Product");
-const Customization = require("../models/Customization");
+const Product = require("../models/products");
+const Customization = require("../models/customizations");
 
 const calculateOrderItems = async (requestedItems) => {
   const customization = await Customization.findOne();
