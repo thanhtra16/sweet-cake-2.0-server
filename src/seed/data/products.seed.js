@@ -228,23 +228,27 @@ async function seedProducts() {
     updateOne: {
       filter: {
         name: product.name,
-        kind: product.kind,
       },
       update: {
-        $setOnInsert: product,
+        $set: product,
       },
       upsert: true,
     },
   }));
 
-  await Product.bulkWrite(operations);
-
-  const total = await Product.countDocuments();
-
-  console.log(
-    `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
-  );
-  console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  try {
+    await Product.bulkWrite(operations);
+    const total = await Product.countDocuments();
+    console.log(
+      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
+    );
+    console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  }
+  catch (error) {
+    console.error(`Lỗi khi đồng bộ Products:`, error);
+    throw error;
+  }
+  
 }
 
 module.exports = seedProducts;

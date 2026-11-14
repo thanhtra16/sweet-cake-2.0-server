@@ -51,22 +51,51 @@ const defaultVouchers = [
   },
 ];
 
+// async function seedVouchers() {
+//   const operations = defaultVouchers.map((voucher) => ({
+//     updateOne: {
+//       filter: { code: voucher.code },
+//       update: {
+//         $setOnInsert: voucher,
+//       },
+//       upsert: true,
+//     },
+//   }));
+
+//   await Voucher.bulkWrite(operations);
+
+//   console.log(
+//     `Seed Vouchers thành công: đã kiểm tra ${defaultVouchers.length} mã giảm giá.`
+//   );
+// }
+
 async function seedVouchers() {
-  const operations = defaultVouchers.map((voucher) => ({
-    updateOne: {
-      filter: { code: voucher.code },
-      update: {
-        $setOnInsert: voucher,
+  const operations = defaultVouchers.map((voucher) => {
+    const { usedCount, ...configData } = voucher; 
+
+    return {
+      updateOne: {
+        filter: { code: voucher.code },
+        update: {
+          $set: configData, // Cập nhật: mức giảm, điều kiện, hạn sử dụng...
+          $setOnInsert: {
+            usedCount: usedCount, // Giữ nguyên số lượt đã dùng nếu mã đã tồn tại
+          },
+        },
+        upsert: true,
       },
-      upsert: true,
-    },
-  }));
+    };
+  });
 
-  await Voucher.bulkWrite(operations);
-
-  console.log(
-    `Seed Vouchers thành công: đã kiểm tra ${defaultVouchers.length} mã giảm giá.`
-  );
+  try {
+    const result = await Voucher.bulkWrite(operations);
+    console.log(
+      `Seed Vouchers hoàn tất: Tạo mới ${result.upsertedCount || 0} | Cập nhật ${result.modifiedCount || 0} (Tổng seed: ${defaultVouchers.length}).`
+    );
+  } catch (error) {
+    console.error(`Lỗi khi đồng bộ Vouchers:`, error);
+    throw error;
+  }
 }
 
 module.exports = seedVouchers;

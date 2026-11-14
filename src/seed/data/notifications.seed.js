@@ -131,7 +131,7 @@ async function seedNotifications() {
         title: notification.title,
       },
       update: {
-        $setOnInsert: notification,
+        $set: notification,
       },
       upsert: true,
     },

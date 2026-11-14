@@ -13,6 +13,7 @@ const defaultCustomizations = {
     { name: "Phô mai", priceDiff: 0, isDefault: false, active: true },
     { name: "Trái cây tươi", priceDiff: 0, isDefault: false, active: true },
     { name: "Socola", priceDiff: 0, isDefault: false, active: true },
+    { name: "Mứt dâu tây", priceDiff: 0, isDefault: false, active: true },
   ],
 
   bases: [
@@ -45,16 +46,19 @@ const defaultCustomizations = {
 };
 
 async function seedCustomizations() {
-  const existing = await Customization.findOne();
+  const customization = await Customization.findOneAndUpdate(
+    {},
+    {
+      $set: defaultCustomizations
+    },
+    {
+      upsert: true,
+      new: true,
+      runValidators: true,
+    }
+  );
 
-  if (existing) {
-    console.log("Customization đã tồn tại, bỏ qua seed.");
-    return;
-  }
-
-  const customization = await Customization.create(defaultCustomizations);
-
-  console.log("Seed Customization thành công:", customization._id);
+  console.log("Seed Customization thành công, cấu hình đã được đồng bộ:", customization._id)
 }
 
 module.exports = seedCustomizations;

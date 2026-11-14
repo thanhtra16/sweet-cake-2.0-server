@@ -45,10 +45,12 @@ async function seedTimeSlots() {
             label: template.label,
           },
           update: {
-            $setOnInsert: {
+            $set: {
+              capacity: template.capacity,
+            },
+            $set: {
               date: slotDate,
               label: template.label,
-              capacity: template.capacity,
               used: 0,
               closed: false,
             },
@@ -59,13 +61,15 @@ async function seedTimeSlots() {
     }
   }
 
-  if (operations.length > 0) {
-    await TimeSlot.bulkWrite(operations);
+  try {
+    if (operations.length > 0) {
+      await TimeSlot.bulkWrite(operations);
+    }
+    console.log(`Seed TimeSlots thành công: đã đồng bộ ${operations.length} khung giờ.`);
+  } catch (error) {
+    console.error(`Lỗi khi đồng bộ TimeSlots:`, error);
+    throw error;
   }
-
-  console.log(
-    `Seed TimeSlots thành công: đã kiểm tra ${operations.length} khung giờ.`
-  );
 }
 
 module.exports = seedTimeSlots;
