@@ -8,11 +8,12 @@
 
 const AppError = require('../utils/AppError');
 const { planTransition } = require('./orderStatus.rules');
+const notificationService = require('./notification.service');
 
 const FORBIDDEN_PATCH_KEYS = ['status', 'statusHistory', '_id'];
 
 function defaultRepo() {
-  const Order = require('../models/order.model');
+  const Order = require('../models/order');
   return {
     findById: (id) => Order.findById(id).lean(),
     // Chỉ cập nhật khi đơn vẫn đang ở trạng thái `from`: hai request đồng thời không thể cùng chuyển một đơn.
@@ -23,12 +24,12 @@ function defaultRepo() {
 /** Hiệu ứng phụ chạy một lần sau khi đổi trạng thái thành công. Mỗi hiệu ứng tự bảo đảm idempotent. */
 const defaultEffects = {
   async RELEASE_SLOT({ slotId }) {
-    const TimeSlot = require('../models/timeSlot.model');
+    const TimeSlot = require('../models/timeslots');
     await TimeSlot.updateOne({ _id: slotId, used: { $gt: 0 } }, { $inc: { used: -1 } });
   },
   async RESTORE_VOUCHER({ orderId, code }) {
-    const Order = require('../models/order.model');
-    const Voucher = require('../models/voucher.model');
+    const Order = require('../models/order');
+    const Voucher = require('../models/vouchers');
     // Đánh dấu restored trước, chỉ hoàn khi đánh dấu thành công: không bao giờ hoàn hai lần (BR15).
     const marked = await Order.updateOne({ _id: orderId, 'voucher.restored': { $ne: true } }, { $set: { 'voucher.restored': true } });
     if (marked.modifiedCount === 1) {
@@ -62,7 +63,7 @@ async function transitionOrder(orderId, to, opts = {}, deps = {}) {
 
   let settings = {};
   if (to === 'cancelled') {
-    const getSettings = deps.getSettings || (() => require('../models/settings.model').findOne().lean());
+    const getSettings = deps.getSettings || (() => require('../models/settings').findOne().lean());
     settings = (await getSettings()) || {};
   }
 
@@ -85,13 +86,18 @@ async function transitionOrder(orderId, to, opts = {}, deps = {}) {
       logger.error(`[orderStatus] hiệu ứng ${effect.type} lỗi cho đơn ${orderId}:`, err);
     }
   }
-  if (plan.notification && deps.notify) {
-    try {
-      await deps.notify(plan.notification);
-    } catch (err) {
-      logger.error(`[orderStatus] gửi thông báo lỗi cho đơn ${orderId}:`, err);
-    }
+const notify = deps.notify || notificationService.notify;
+
+if (plan.notification) {
+  try {
+    await notify(plan.notification);
+  } catch (err) {
+    logger.error(
+      `[orderStatus] gửi thông báo lỗi cho đơn ${orderId}:`,
+      err
+    );
   }
+}
 
   return updated;
 }
