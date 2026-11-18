@@ -3,6 +3,9 @@ const router = express.Router();
 
 const healthRoutes = require("./health.routes");
 const authRoutes = require("./auth.routes");
+const imagesRoutes = require("./images.routes");
+const productsRoutes = require("./products.routes");
+const ordersRoutes = require("./orders.routes");
 const userRoutes = require("./user.routes");
 const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
@@ -30,5 +33,11 @@ router.use("/notifications", notificationRoutes);
 
 // API Admin quản lý khách hàng
 router.use("/admin", adminRoutes);
+
+router.use("/images", imagesRoutes);
+
+router.use("/products", productsRoutes);
+
+router.use("/orders", ordersRoutes);
 
 module.exports = router;
