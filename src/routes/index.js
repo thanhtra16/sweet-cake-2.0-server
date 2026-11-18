@@ -14,6 +14,7 @@ router.use("/", healthRoutes);
 
 // API đăng ký, đăng nhập
 router.use("/auth", authRoutes);
+  
 
 // API tài khoản
 router.use("/users", userRoutes);
