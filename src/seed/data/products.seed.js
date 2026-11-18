@@ -207,18 +207,30 @@ async function seedProducts() {
           },
         },
         upsert: true,
+  const operations = defaultProducts.map((product) => ({
+    updateOne: {
+      filter: {
+        name: product.name,
+      },
+      update: {
+        $set: product,
       },
     };
   });
 
-  await Product.bulkWrite(operations);
-
-  const total = await Product.countDocuments();
-
-  console.log(
-    `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
-  );
-  console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  try {
+    await Product.bulkWrite(operations);
+    const total = await Product.countDocuments();
+    console.log(
+      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
+    );
+    console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  }
+  catch (error) {
+    console.error(`Lỗi khi đồng bộ Products:`, error);
+    throw error;
+  }
+  
 }
 
 module.exports = seedProducts;

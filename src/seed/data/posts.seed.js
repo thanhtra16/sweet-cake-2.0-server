@@ -120,17 +120,21 @@ async function seedPosts() {
     updateOne: {
       filter: { slug: post.slug },
       update: {
-        $setOnInsert: post,
+        $set: post,
       },
       upsert: true,
     },
   }));
 
-  await Post.bulkWrite(operations);
-
-  console.log(
-    `Seed Posts thành công: đã kiểm tra ${defaultPosts.length} bài viết mẫu.`
-  );
+  try {
+    await Post.bulkWrite(operations);
+    console.log(
+      `Seed Posts thành công: đã kiểm tra ${defaultPosts.length} bài viết mẫu.`
+    );
+  } catch (error) {
+    console.error(`Lỗi khi đồng bộ Posts:`, error);
+    throw error;
+  }
 }
 
 module.exports = seedPosts;

@@ -232,17 +232,22 @@ async function seedOrders() {
     updateOne: {
       filter: { code: order.code },
       update: {
-        $setOnInsert: order,
+        $set: order,
       },
       upsert: true,
     },
   }));
 
-  await Order.bulkWrite(operations);
+  try {
+    await Order.bulkWrite(operations);
 
-  console.log(
-    `Seed Orders thành công: đã kiểm tra ${defaultOrders.length} đơn hàng mẫu.`
-  );
+    console.log(
+      `Seed Orders thành công: đã kiểm tra ${defaultOrders.length} đơn hàng mẫu.`
+    );
+  } catch (error) {
+    console.error(`Lỗi khi đồng bộ Orders:`, error);
+    throw error;
+  }
 }
 
 module.exports = seedOrders;
