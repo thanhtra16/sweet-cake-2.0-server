@@ -2,11 +2,14 @@ const TimeSlot = require("../../models/timeslots");
 const Setting = require("../../models/settings");
 
 const defaultSlotTemplates = [
-  { label: "09:00 - 11:00", capacity: 5 },
-  { label: "11:00 - 13:00", capacity: 5 },
-  { label: "13:00 - 15:00", capacity: 5 },
-  { label: "15:00 - 17:00", capacity: 5 },
-  { label: "17:00 - 19:00", capacity: 5 },
+  { label: "09:00 - 10:00", capacity: 5 },
+  { label: "10:00 - 11:00", capacity: 5 },
+  { label: "11:00 - 12:00", capacity: 5 },
+  { label: "12:00 - 13:00", capacity: 5 },
+  { label: "13:00 - 14:00", capacity: 5 },
+  { label: "14:00 - 15:00", capacity: 5 },
+  { label: "15:00 - 16:00", capacity: 5 },
+  { label: "16:00 - 17:00", capacity: 5 },
 ];
 
 async function seedTimeSlots() {
