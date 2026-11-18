@@ -1,3 +1,5 @@
+
+// File tập trung quản lý các route của dự án
 const express = require("express");
 const router = express.Router();
 
@@ -39,5 +41,17 @@ router.use("/images", imagesRoutes);
 router.use("/products", productsRoutes);
 
 router.use("/orders", ordersRoutes);
+
+// API bài viết
+router.use("/posts", postRoutes);
+
+// API câu hỏi thường gặp
+router.use("/faqs", faqRoutes);
+
+// API thông báo
+router.use("/notifications", notificationRoutes);
+
+// API Admin quản lý khách hàng
+router.use("/admin", adminRoutes);
 
 module.exports = router;
