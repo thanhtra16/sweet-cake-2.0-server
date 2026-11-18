@@ -13,4 +13,10 @@ router.post("/:id/confirm-payment", adminOrderController.confirmPayment);
 router.post("/:id/accept", adminOrderController.acceptOrder);
 router.post("/:id/reject", adminOrderController.rejectOrder);
 
+// ==================== BỔ SUNG PHẦN 2: LẬP PHIẾU, ẢNH & STATE MACHINE ====================
+router.post("/:id/production-ticket", adminOrderController.createProductionTicket); // Lập phiếu làm bánh (1 lần)
+router.get("/:id/production-ticket", adminOrderController.getProductionTicket);    // Xem/in phiếu làm bánh (có cờ ĐƠN ĐÃ HỦY)
+router.put("/:id/photos", adminOrderController.updateOrderPhotos);                 // PUT cập nhật hình ảnh sản phẩm thực tế
+router.patch("/:id/status", adminOrderController.updateOrderStatus);               // PATCH trạng thái qua State Machine (TICKET_REQUIRED, PHOTO_REQUIRED)
+
 module.exports = router;
