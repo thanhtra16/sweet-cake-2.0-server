@@ -18,5 +18,9 @@ router.post("/:id/production-ticket", adminOrderController.createProductionTicke
 router.get("/:id/production-ticket", adminOrderController.getProductionTicket);    // Xem/in phiếu làm bánh (có cờ ĐƠN ĐÃ HỦY)
 router.put("/:id/photos", adminOrderController.updateOrderPhotos);                 // PUT cập nhật hình ảnh sản phẩm thực tế
 router.patch("/:id/status", adminOrderController.updateOrderStatus);               // PATCH trạng thái qua State Machine (TICKET_REQUIRED, PHOTO_REQUIRED)
+// ==================== BỔ SUNG PHẦN 3: XỬ LÝ YÊU CẦU HỦY & HOÀN TIỀN ====================
+router.post("/:id/cancel-request/decision", adminOrderController.decideCancelRequest);
+router.post("/:id/special-cancel", adminOrderController.specialCancel);
+router.post("/:id/refund/confirm", adminOrderController.confirmRefund);
 
 module.exports = router;

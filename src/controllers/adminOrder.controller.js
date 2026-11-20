@@ -1,5 +1,5 @@
 const adminOrderService = require("../services/adminOrder.service");
-const Order = require("../models/order");
+const { Order } = require("../models");
 
 async function getOrders(req, res, next) {
   try {
@@ -51,7 +51,6 @@ async function rejectOrder(req, res, next) {
 
 // ==================== BỔ SUNG PHẦN 2: LẬP PHIẾU, ẢNH VÀ STATE MACHINE ====================
 
-// 1. Lập Phiếu làm bánh (Lập 1 lần, kiểm tra cờ ĐƠN ĐÃ HỦY)
 async function createProductionTicket(req, res, next) {
   try {
     const adminId = req.user ? req.user._id : null;
@@ -86,7 +85,6 @@ async function createProductionTicket(req, res, next) {
   }
 }
 
-// 2. Xem / in Phiếu làm bánh (Kèm trạng thái cờ ĐƠN ĐÃ HỦY)
 async function getProductionTicket(req, res, next) {
   try {
     const orderId = req.params.id;
@@ -116,7 +114,6 @@ async function getProductionTicket(req, res, next) {
   }
 }
 
-// 3. Cập nhật hình ảnh sản phẩm thực tế (PUT photos / photoIds)
 async function updateOrderPhotos(req, res, next) {
   try {
     const orderId = req.params.id;
@@ -148,7 +145,6 @@ async function updateOrderPhotos(req, res, next) {
   }
 }
 
-// 4. Cập nhật trạng thái qua State Machine (PATCH status)
 async function updateOrderStatus(req, res, next) {
   try {
     const orderId = req.params.id;
@@ -163,7 +159,6 @@ async function updateOrderStatus(req, res, next) {
       return res.status(400).json({ success: false, message: "ĐƠN ĐÃ HỦY - Không thể thay đổi trạng thái đơn hàng." });
     }
 
-    // --- RÀNG BUỘC STATE MACHINE ---
     if (nextStatus === "baking") {
       if (!order.productionTicket || !order.productionTicket.createdAt) {
         return res.status(400).json({
@@ -205,7 +200,9 @@ async function updateOrderStatus(req, res, next) {
     return next(err);
   }
 }
-// 5. Duyệt / Từ chối yêu cầu hủy (POST /cancel-request/decision)
+
+// ==================== BỔ SUNG PHẦN 3: XỬ LÝ YÊU CẦU HỦY & HOÀN TIỀN ====================
+
 async function decideCancelRequest(req, res, next) {
   try {
     const adminId = req.user ? req.user._id : null;
@@ -216,7 +213,6 @@ async function decideCancelRequest(req, res, next) {
   }
 }
 
-// 6. Hủy đặc biệt (POST /special-cancel)
 async function specialCancel(req, res, next) {
   try {
     const adminId = req.user ? req.user._id : null;
@@ -227,7 +223,6 @@ async function specialCancel(req, res, next) {
   }
 }
 
-// 7. Xác nhận đã hoàn tiền (POST /refund/confirm)
 async function confirmRefund(req, res, next) {
   try {
     const adminId = req.user ? req.user._id : null;
@@ -237,9 +232,7 @@ async function confirmRefund(req, res, next) {
     return next(err);
   }
 }
-router.post("/:id/cancel-request/decision", adminOrderController.decideCancelRequest);
-router.post("/:id/special-cancel", adminOrderController.specialCancel);
-router.post("/:id/refund/confirm", adminOrderController.confirmRefund);
+
 module.exports = {
   getOrders,
   getOrderById,
@@ -250,4 +243,7 @@ module.exports = {
   getProductionTicket,
   updateOrderPhotos,
   updateOrderStatus,
+  decideCancelRequest,
+  specialCancel,
+  confirmRefund,
 };
