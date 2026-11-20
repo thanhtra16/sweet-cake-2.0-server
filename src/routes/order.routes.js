@@ -18,5 +18,6 @@ router.get("/", auth, orderController.getOrders);
 router.get("/:id", authOrTrackToken, orderController.getOrderById);
 router.post("/:id/cancel", authOrTrackToken, orderController.cancelOrder);
 router.post("/:id/cancel-request", authOrTrackToken, orderController.createCancelRequest);
+router.post("/:id/reorder", authOrTrackToken, orderController.reorder);
 
 module.exports = router;

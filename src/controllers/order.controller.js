@@ -69,10 +69,25 @@ async function createCancelRequest(req, res, next) {
   }
 }
 
+async function reorder(req, res, next) {
+  try {
+    const authContext = extractAuthContext(req);
+    const result = await orderService.reorderFromOrder(
+      req.params.id,
+      req.body,
+      authContext
+    );
+    return res.status(req.body?.mode === "create" ? 201 : 200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getOrders,
   trackOrder,
   getOrderById,
   cancelOrder,
   createCancelRequest,
+  reorder,
 };

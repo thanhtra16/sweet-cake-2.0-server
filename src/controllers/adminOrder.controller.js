@@ -205,7 +205,41 @@ async function updateOrderStatus(req, res, next) {
     return next(err);
   }
 }
+// 5. Duyệt / Từ chối yêu cầu hủy (POST /cancel-request/decision)
+async function decideCancelRequest(req, res, next) {
+  try {
+    const adminId = req.user ? req.user._id : null;
+    const order = await adminOrderService.decideCancelRequest(req.params.id, req.body, adminId);
+    return res.status(200).json(order);
+  } catch (err) {
+    return next(err);
+  }
+}
 
+// 6. Hủy đặc biệt (POST /special-cancel)
+async function specialCancel(req, res, next) {
+  try {
+    const adminId = req.user ? req.user._id : null;
+    const order = await adminOrderService.specialCancelOrder(req.params.id, req.body, adminId);
+    return res.status(200).json(order);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+// 7. Xác nhận đã hoàn tiền (POST /refund/confirm)
+async function confirmRefund(req, res, next) {
+  try {
+    const adminId = req.user ? req.user._id : null;
+    const order = await adminOrderService.confirmRefund(req.params.id, req.body, adminId);
+    return res.status(200).json(order);
+  } catch (err) {
+    return next(err);
+  }
+}
+router.post("/:id/cancel-request/decision", adminOrderController.decideCancelRequest);
+router.post("/:id/special-cancel", adminOrderController.specialCancel);
+router.post("/:id/refund/confirm", adminOrderController.confirmRefund);
 module.exports = {
   getOrders,
   getOrderById,
