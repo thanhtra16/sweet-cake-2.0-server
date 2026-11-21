@@ -1,0 +1,84 @@
+{
+  "id": "7a14eaa1-4b8a-4b2f-8e9c-9d3f13fbe001",
+  "name": "Sweet Cake - Local",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "enabled": true
+    },
+    {
+      "key": "buyerToken",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "trackToken",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "orderCode",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "addressId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "timeSlotId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "voucherId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "reviewId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "imageId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "notificationId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "postId",
+      "value": "",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-11-05T00:00:00.000Z",
+  "_postman_exported_using": "ChatGPT"
+}

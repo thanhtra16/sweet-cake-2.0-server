@@ -16,12 +16,12 @@ const blogRoutes = require("./blog.routes");
 // const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
 
+
 // API kiểm tra server
 router.use("/", healthRoutes);
 
 // API đăng ký, đăng nhập
 router.use("/auth", authRoutes);
-  
 
 // API tài khoản
 router.use("/users", userRoutes);
