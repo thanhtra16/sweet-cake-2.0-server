@@ -25,4 +25,3 @@ router.patch("/read-all", markAllAsRead);
 // Đánh dấu một thông báo đã đọc
 router.patch("/:id/read", markAsRead);
 
-module.exports = router;
