@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "data": {
+    "qrUrl": "https://example.com/mock-payment-qr",
+    "deadlineAt": "2026-11-05T15:00:00+07:00",
+    "retryCount": 1
+  }
+}

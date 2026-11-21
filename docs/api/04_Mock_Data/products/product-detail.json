@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "data": {
+    "_id": "mock-product-001",
+    "name": "Bánh kem dâu",
+    "description": "Bánh kem mẫu dùng cho giao diện mock.",
+    "basePrice": 350000,
+    "status": "visible",
+    "imageIds": [
+      "mock-image-strawberry-cake"
+    ]
+  }
+}
