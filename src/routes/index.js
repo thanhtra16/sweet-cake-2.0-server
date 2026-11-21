@@ -11,7 +11,7 @@ const ordersRoutes = require("./orders.routes");
 const userRoutes = require("./user.routes");
 const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
-const notificationRoutes = require("./notification.routes");
+// const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
 
 // API kiểm tra server
@@ -31,7 +31,7 @@ router.use("/posts", postRoutes);
 router.use("/faqs", faqRoutes);
 
 // API thông báo
-router.use("/notifications", notificationRoutes);
+// router.use("/notifications", notificationRoutes);
 
 // API Admin quản lý khách hàng
 router.use("/admin", adminRoutes);
@@ -49,7 +49,7 @@ router.use("/posts", postRoutes);
 router.use("/faqs", faqRoutes);
 
 // API thông báo
-router.use("/notifications", notificationRoutes);
+// router.use("/notifications", notificationRoutes);
 
 // API Admin quản lý khách hàng
 router.use("/admin", adminRoutes);
