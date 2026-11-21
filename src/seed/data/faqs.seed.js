@@ -80,17 +80,21 @@ async function seedFAQs() {
         question: faq.question,
       },
       update: {
-        $setOnInsert: faq,
+        $set: faq,
       },
       upsert: true,
     },
   }));
 
-  await FAQ.bulkWrite(operations);
-
-  console.log(
-    `Seed FAQs thành công: đã kiểm tra ${defaultFAQs.length} câu hỏi thường gặp.`
-  );
+  try {
+    await FAQ.bulkWrite(operations);
+    console.log(
+      `Seed FAQs thành công: đã kiểm tra ${defaultFAQs.length} câu hỏi thường gặp.`
+    );
+  } catch (error) {
+    console.error(`Lỗi khi đồng bộ FAQs:`, error);
+    throw error;
+  }
 }
 
 module.exports = seedFAQs;

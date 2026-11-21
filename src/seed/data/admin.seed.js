@@ -15,7 +15,7 @@ async function seedAdmin() {
   const admin = await User.findOneAndUpdate(
     { phone },
     {
-      $setOnInsert: {
+      $set: {
         fullName: "Quản trị viên SweetCake",
         phone,
         email,

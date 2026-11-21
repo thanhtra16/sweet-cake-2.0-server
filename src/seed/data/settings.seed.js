@@ -39,7 +39,7 @@ const defaultSettings = {
 async function seedSettings() {
   const setting = await Setting.findOneAndUpdate(
     {},
-    { $setOnInsert: defaultSettings },
+    { $set: defaultSettings },
     {
       upsert: true,
       new: true,

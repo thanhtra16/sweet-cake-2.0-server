@@ -1,3 +1,4 @@
+
 const Product = require("../../models/products");
 
 const defaultProducts = [
@@ -15,8 +16,8 @@ const defaultProducts = [
     status: "visible",
     featured: true,
     imageIds: [],
-    availableSizes: ["18cm", "20cm", "22cm"],
-    availableFillings: ["Bắp", "Matcha", "Phô mai", "Trái cây tươi", "Socola"],
+    availableSizes: ["10cm", "14cm", "18cm", "22cm"],
+    availableFillings: ["Bắp", "Matcha", "Phô mai", "Trái cây tươi", "Socola", "Mứt dâu tây"],
     variants: [],
   },
   {
@@ -30,8 +31,8 @@ const defaultProducts = [
     status: "visible",
     featured: true,
     imageIds: [],
-    availableSizes: ["18cm", "20cm", "22cm"],
-    availableFillings: ["Socola", "Phô mai", "Bắp"],
+    availableSizes: ["10cm", "14cm", "18cm", "22cm"],
+    availableFillings: ["Socola", "Phô mai", "Bắp", "Mứt dâu tây"],
     variants: [],
   },
   {
@@ -45,8 +46,8 @@ const defaultProducts = [
     status: "visible",
     featured: true,
     imageIds: [],
-    availableSizes: ["18cm", "20cm", "22cm"],
-    availableFillings: ["Trái cây tươi", "Bắp", "Phô mai"],
+    availableSizes: ["10cm", "14cm", "18cm", "22cm"],
+    availableFillings: ["Trái cây tươi", "Bắp", "Phô mai", "Mứt dâu tây"],
     variants: [],
   },
   {
@@ -60,8 +61,8 @@ const defaultProducts = [
     status: "visible",
     featured: false,
     imageIds: [],
-    availableSizes: ["18cm", "20cm", "22cm"],
-    availableFillings: ["Matcha", "Phô mai"],
+    availableSizes: ["10cm", "14cm", "18cm", "22cm"],
+    availableFillings: ["Matcha", "Phô mai", "Mứt dâu tây"],
     variants: [],
   },
   {
@@ -75,8 +76,8 @@ const defaultProducts = [
     status: "visible",
     featured: false,
     imageIds: [],
-    availableSizes: ["18cm"],
-    availableFillings: ["Bắp", "Matcha", "Phô mai", "Socola"],
+    availableSizes: ["10cm"],
+    availableFillings: ["Bắp", "Matcha", "Phô mai", "Socola", "Mứt dâu tây"],
     variants: [],
   },
 
@@ -97,26 +98,10 @@ const defaultProducts = [
     availableSizes: [],
     availableFillings: [],
     variants: [
-      {
-        label: "Số 0",
-        attributes: { number: 0 },
-        active: true,
-      },
-      {
-        label: "Số 1",
-        attributes: { number: 1 },
-        active: true,
-      },
-      {
-        label: "Số 2",
-        attributes: { number: 2 },
-        active: true,
-      },
-      {
-        label: "Số 3",
-        attributes: { number: 3 },
-        active: true,
-      },
+      { label: "Số 0", attributes: { number: 0 }, active: true },
+      { label: "Số 1", attributes: { number: 1 }, active: true },
+      { label: "Số 2", attributes: { number: 2 }, active: true },
+      { label: "Số 3", attributes: { number: 3 }, active: true },
     ],
   },
   {
@@ -133,16 +118,8 @@ const defaultProducts = [
     availableSizes: [],
     availableFillings: [],
     variants: [
-      {
-        label: "Happy Birthday",
-        attributes: { text: "Happy Birthday" },
-        active: true,
-      },
-      {
-        label: "Love",
-        attributes: { text: "Love" },
-        active: true,
-      },
+      { label: "Happy Birthday", attributes: { text: "Happy Birthday" }, active: true },
+      { label: "Love", attributes: { text: "Love" }, active: true },
     ],
   },
   {
@@ -204,47 +181,56 @@ const defaultProducts = [
     availableSizes: [],
     availableFillings: [],
     variants: [
-      {
-        label: "Màu hồng",
-        attributes: { color: "Hồng" },
-        active: true,
-      },
-      {
-        label: "Màu xanh",
-        attributes: { color: "Xanh" },
-        active: true,
-      },
-      {
-        label: "Màu vàng",
-        attributes: { color: "Vàng" },
-        active: true,
-      },
+      { label: "Màu hồng", attributes: { color: "Hồng" }, active: true },
+      { label: "Màu xanh", attributes: { color: "Xanh" }, active: true },
+      { label: "Màu vàng", attributes: { color: "Vàng" }, active: true },
     ],
   },
 ];
 
 async function seedProducts() {
+  const operations = defaultProducts.map((product) => {
+    const {
+      availableSizes,
+      availableFillings,
+      ...insertFields
+    } = product;
+
+    return {
+      updateOne: {
+        filter: { name: product.name },
+        update: {
+          $setOnInsert: insertFields,
+          $set: {
+            availableSizes,
+            availableFillings,
+          },
+        },
+        upsert: true,
   const operations = defaultProducts.map((product) => ({
     updateOne: {
       filter: {
         name: product.name,
-        kind: product.kind,
       },
       update: {
-        $setOnInsert: product,
+        $set: product,
       },
-      upsert: true,
-    },
-  }));
+    };
+  });
 
-  await Product.bulkWrite(operations);
-
-  const total = await Product.countDocuments();
-
-  console.log(
-    `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
-  );
-  console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  try {
+    await Product.bulkWrite(operations);
+    const total = await Product.countDocuments();
+    console.log(
+      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
+    );
+    console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  }
+  catch (error) {
+    console.error(`Lỗi khi đồng bộ Products:`, error);
+    throw error;
+  }
+  
 }
 
 module.exports = seedProducts;

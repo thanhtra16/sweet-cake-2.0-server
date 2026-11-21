@@ -2,11 +2,14 @@ const TimeSlot = require("../../models/timeslots");
 const Setting = require("../../models/settings");
 
 const defaultSlotTemplates = [
-  { label: "09:00 - 11:00", capacity: 5 },
-  { label: "11:00 - 13:00", capacity: 5 },
-  { label: "13:00 - 15:00", capacity: 5 },
-  { label: "15:00 - 17:00", capacity: 5 },
-  { label: "17:00 - 19:00", capacity: 5 },
+  { label: "09:00 - 10:00", capacity: 5 },
+  { label: "10:00 - 11:00", capacity: 5 },
+  { label: "11:00 - 12:00", capacity: 5 },
+  { label: "12:00 - 13:00", capacity: 5 },
+  { label: "13:00 - 14:00", capacity: 5 },
+  { label: "14:00 - 15:00", capacity: 5 },
+  { label: "15:00 - 16:00", capacity: 5 },
+  { label: "16:00 - 17:00", capacity: 5 },
 ];
 
 async function seedTimeSlots() {
@@ -45,10 +48,12 @@ async function seedTimeSlots() {
             label: template.label,
           },
           update: {
-            $setOnInsert: {
+            $set: {
+              capacity: template.capacity,
+            },
+            $set: {
               date: slotDate,
               label: template.label,
-              capacity: template.capacity,
               used: 0,
               closed: false,
             },
@@ -59,13 +64,15 @@ async function seedTimeSlots() {
     }
   }
 
-  if (operations.length > 0) {
-    await TimeSlot.bulkWrite(operations);
+  try {
+    if (operations.length > 0) {
+      await TimeSlot.bulkWrite(operations);
+    }
+    console.log(`Seed TimeSlots thành công: đã đồng bộ ${operations.length} khung giờ.`);
+  } catch (error) {
+    console.error(`Lỗi khi đồng bộ TimeSlots:`, error);
+    throw error;
   }
-
-  console.log(
-    `Seed TimeSlots thành công: đã kiểm tra ${operations.length} khung giờ.`
-  );
 }
 
 module.exports = seedTimeSlots;
