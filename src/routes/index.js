@@ -11,6 +11,8 @@ const ordersRoutes = require("./orders.routes");
 const userRoutes = require("./user.routes");
 const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
+const blogRoutes = require("./blog.routes");
+ 
 // const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
 
@@ -53,5 +55,9 @@ router.use("/faqs", faqRoutes);
 
 // API Admin quản lý khách hàng
 router.use("/admin", adminRoutes);
+
+// API Blog
+
+router.use("/blogs", blogRoutes);
 
 module.exports = router;
