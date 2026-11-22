@@ -1,4 +1,5 @@
 const orderService = require("../services/order.service");
+const pricingService = require("../services/pricing.service");
 
 function extractAuthContext(req) {
   const userId = req.user ? req.user._id : null;
@@ -83,6 +84,19 @@ async function reorder(req, res, next) {
   }
 }
 
+// Tính giá tạm tính cho đơn hàng (bao gồm tùy chọn bánh, voucher, phí giao hàng)
+async function quoteOrder(req, res, next) {
+  try {
+    const data = await pricingService.quote(req.body);
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getOrders,
   trackOrder,
@@ -90,4 +104,5 @@ module.exports = {
   cancelOrder,
   createCancelRequest,
   reorder,
+  quoteOrder,
 };
