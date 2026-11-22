@@ -39,4 +39,38 @@ const requireRole =
     next();
   };
 
-module.exports = { auth, requireRole };
+  
+const optionalAuth = async (req, res, next) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ")
+    ? header.slice(7)
+    : null;
+
+  // Không có token: cho phép truy cập ảnh công khai
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const payload = verifyToken(token);
+    const user = await User.findById(payload.id);
+
+    if (
+      user &&
+      !user.isLocked &&
+      !(
+        user.passwordChangedAt &&
+        payload.iat <
+          Math.floor(user.passwordChangedAt.getTime() / 1000)
+      )
+    ) {
+      req.user = user;
+    }
+
+    return next();
+  } catch (error) {
+    return next();
+  }
+};
+
+module.exports = { auth, requireRole, optionalAuth };

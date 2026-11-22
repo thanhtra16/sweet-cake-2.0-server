@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "data": {
+    "order": {
+      "_id": "mock-order-001",
+      "code": "SC-MOCK-0001",
+      "status": "pending_payment",
+      "total": 350000,
+      "payment": {
+        "qrUrl": "https://example.com/mock-payment-qr",
+        "deadlineAt": "2026-11-05T15:00:00+07:00"
+      }
+    },
+    "trackToken": "MOCK_TRACK_TOKEN_WITH_JUST_PLACED"
+  }
+}
