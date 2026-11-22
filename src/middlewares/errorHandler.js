@@ -3,6 +3,7 @@ const multer = require("multer");
 const { errorResponse } = require("../utils/response");
 
 const errorHandler = (err, req, res, next) => {
+  console.error(err.stack);
   // Xử lý lỗi Multer
   if (err instanceof multer.MulterError) {
     let message = "Lỗi khi tải ảnh lên";

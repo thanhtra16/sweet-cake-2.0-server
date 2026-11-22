@@ -54,39 +54,61 @@ function sanitizeOrderForCustomer(orderDoc) {
   return order;
 }
 
-async function assertCustomerOrderAccess(orderId, { userId, trackPayload }) {
+async function assertCustomerOrderAccess(orderId, { userId, trackPayload } = {}) {
   const order = await Order.findById(orderId);
   if (!order) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
   }
 
-  if (userId && order.userId && order.userId.toString() === userId.toString()) {
-    return order;
+  // Nếu có userId -> kiểm tra khớp chủ đơn
+  if (userId) {
+    if (order.userId && order.userId.toString() === userId.toString()) {
+      return order;
+    }
+    throw new AppError(
+      403,
+      "ORDER_ACCESS_DENIED",
+      "Bạn không có quyền truy cập đơn hàng này."
+    );
   }
 
-  if (
-    trackPayload &&
-    trackPayload.orderId &&
-    trackPayload.orderId.toString() === order._id.toString()
-  ) {
-    return order;
+  // Nếu có trackPayload -> kiểm tra khớp mã đơn tra cứu
+  if (trackPayload && trackPayload.orderId) {
+    if (trackPayload.orderId.toString() === order._id.toString()) {
+      return order;
+    }
+    throw new AppError(
+      403,
+      "ORDER_ACCESS_DENIED",
+      "Bạn không có quyền truy cập đơn hàng này."
+    );
   }
 
-  throw new AppError(
-    403,
-    "ORDER_ACCESS_DENIED",
-    "Bạn không có quyền truy cập đơn hàng này."
-  );
+  // Chế độ mở (khi chưa đăng nhập / xem từ danh sách chung)
+  return order;
 }
 
 async function getCustomerOrders(userId, query = {}) {
-  const { group, status, from, to, page = 1, limit = 10 } = query;
+  const { group, status, phone, from, to, page = 1, limit = 20 } = query;
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
 
-  const filter = { userId };
+  const filter = {};
+
+  // Nếu đã đăng nhập -> lọc theo userId; nếu chưa đăng nhập -> lọc theo SĐT (nếu nhập) hoặc lấy tất cả
+  if (userId) {
+    filter.userId = userId;
+  } else if (phone && String(phone).trim()) {
+    const cleanPhone = normalizePhone(phone);
+    const altPhone = cleanPhone.startsWith("0")
+      ? "+84" + cleanPhone.slice(1)
+      : cleanPhone;
+    filter["receiver.phone"] = {
+      $in: [cleanPhone, altPhone, String(phone).trim()],
+    };
+  }
 
   if (status) {
     filter.status = status;
