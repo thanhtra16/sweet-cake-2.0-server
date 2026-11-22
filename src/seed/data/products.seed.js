@@ -200,20 +200,15 @@ async function seedProducts() {
       updateOne: {
         filter: { name: product.name },
         update: {
+          // Chỉ ghi các trường này khi sản phẩm chưa tồn tại (không đè dữ liệu đã chỉnh sửa)
           $setOnInsert: insertFields,
+          // Luôn đồng bộ kích thước và nhân bánh
           $set: {
             availableSizes,
             availableFillings,
           },
         },
         upsert: true,
-  const operations = defaultProducts.map((product) => ({
-    updateOne: {
-      filter: {
-        name: product.name,
-      },
-      update: {
-        $set: product,
       },
     };
   });
@@ -225,12 +220,10 @@ async function seedProducts() {
       `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
     );
     console.log(`Tổng số sản phẩm hiện có: ${total}`);
-  }
-  catch (error) {
+  } catch (error) {
     console.error(`Lỗi khi đồng bộ Products:`, error);
     throw error;
   }
-  
 }
 
 module.exports = seedProducts;

@@ -1,3 +1,4 @@
+
 {
   "name": "my-server",
   "version": "1.0.0",
@@ -6,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node src/seed/seed.js"
+    "seed": "node src/seed/seed.js",
+    "seed:blogs": "node src/seed/data/blogs.seed.js"
   },
   "keywords": [],
   "author": "",

@@ -7,6 +7,7 @@ const authRoutes = require("./auth.routes");
 const userRoutes = require("./user.routes");
 const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
+const blogRoutes = require("./blog.routes");
 const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
 const adminCustomizationRoutes = require("./adminCustomization.routes");
@@ -25,9 +26,10 @@ router.use("/auth", authRoutes);
 // API tài khoản
 router.use("/users", userRoutes);
 
-// API bài viết, FAQ, thông báo
+// API bài viết, FAQ, Blog, thông báo
 router.use("/posts", postRoutes);
 router.use("/faqs", faqRoutes);
+router.use("/blogs", blogRoutes);
 router.use("/notifications", notificationRoutes);
 
 // API Admin
