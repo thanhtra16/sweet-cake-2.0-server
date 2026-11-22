@@ -9,10 +9,12 @@ const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
 const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
+const productsRoutes = require("./products.routes");
 
 // Đăng ký các nhóm API
 router.use("/", healthRoutes);
 router.use("/auth", authRoutes);
+router.use("/products", productsRoutes);
 
 // API bài viết
 router.use("/posts", postRoutes);
