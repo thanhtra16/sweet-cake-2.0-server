@@ -125,7 +125,7 @@ const getProducts = async (req, res, next) => {
       { $limit: pageSize },
       {
         $lookup: {
-          from: "images",
+          from: "media",
           localField: "imageIds",
           foreignField: "_id",
           as: "imageIds",
