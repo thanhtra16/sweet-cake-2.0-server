@@ -1,5 +1,5 @@
-
 const Product = require("../../models/products");
+const Media = require("../../models/media");
 
 const defaultProducts = [
   // =========================
@@ -25,7 +25,7 @@ const defaultProducts = [
     kind: "cake",
     category: "Bánh sinh nhật",
     occasions: ["Sinh nhật", "Kỷ niệm"],
-    description: "Bánh kem vị socola với lớp kem mềm mịn, thích hợp cho người yêu thích socola.",
+    description: "Bánh kem vị socola với lớp kem mềm mịn.",
     basePrice: 320000,
     salePrice: null,
     status: "visible",
@@ -70,7 +70,7 @@ const defaultProducts = [
     kind: "cake",
     category: "Bánh Bento",
     occasions: ["Sinh nhật", "Kỷ niệm", "Chúc mừng"],
-    description: "Bánh kem Bento kích thước nhỏ, phù hợp cho những dịp đặc biệt đơn giản.",
+    description: "Bánh kem Bento kích thước nhỏ, phù hợp cho những dịp đặc biệt.",
     basePrice: 150000,
     salePrice: null,
     status: "visible",
@@ -78,6 +78,51 @@ const defaultProducts = [
     imageIds: [],
     availableSizes: ["10cm"],
     availableFillings: ["Bắp", "Matcha", "Phô mai", "Socola", "Mứt dâu tây"],
+    variants: [],
+  },
+  {
+    name: "Strawberry Mousse",
+    kind: "cake",
+    category: "Bánh mousse",
+    occasions: ["Sinh nhật"],
+    description: "Bánh mousse dâu tây mềm mịn, kết hợp vị ngọt dịu và trái cây tươi.",
+    basePrice: 450000,
+    salePrice: null,
+    status: "visible",
+    featured: true,
+    imageIds: [],
+    availableSizes: ["10cm", "14cm", "18cm", "22cm"],
+    availableFillings: ["Trái cây tươi"],
+    variants: [],
+  },
+  {
+    name: "Chocolate Truffle",
+    kind: "cake",
+    category: "Bánh mousse",
+    occasions: ["Kỷ niệm"],
+    description: "Bánh chocolate đậm vị, phủ lớp ganache mềm mượt.",
+    basePrice: 520000,
+    salePrice: null,
+    status: "visible",
+    featured: false,
+    imageIds: [],
+    availableSizes: ["10cm", "14cm", "18cm", "22cm"],
+    availableFillings: ["Socola"],
+    variants: [],
+  },
+  {
+    name: "White Lace Wedding",
+    kind: "cake",
+    category: "Bánh bông lan",
+    occasions: ["Tiệc cưới"],
+    description: "Bánh cưới trang trí họa tiết ren trắng thanh lịch.",
+    basePrice: 1200000,
+    salePrice: null,
+    status: "visible",
+    featured: false,
+    imageIds: [],
+    availableSizes: ["18cm", "22cm"],
+    availableFillings: ["Phô mai"],
     variants: [],
   },
 
@@ -127,52 +172,7 @@ const defaultProducts = [
     kind: "accessory",
     category: "Phụ kiện trang trí",
     occasions: ["Sinh nhật"],
-    description: "Nón sinh nhật dùng để trang trí và tạo điểm nhấn cho bánh kem.",
-    basePrice: 20000,
-    salePrice: null,
-    status: "visible",
-    featured: false,
-    imageIds: [],
-    availableSizes: [],
-    availableFillings: [],
-    variants: [],
-  },
-  {
-    name: "Pháo sinh nhật",
-    kind: "accessory",
-    category: "Phụ kiện trang trí",
-    occasions: ["Sinh nhật", "Chúc mừng"],
-    description: "Phụ kiện pháo trang trí dùng trong các buổi tiệc sinh nhật.",
-    basePrice: 25000,
-    salePrice: null,
-    status: "visible",
-    featured: false,
-    imageIds: [],
-    availableSizes: [],
-    availableFillings: [],
-    variants: [],
-  },
-  {
-    name: "Bình xịt trang trí",
-    kind: "accessory",
-    category: "Phụ kiện trang trí",
-    occasions: ["Sinh nhật", "Kỷ niệm"],
-    description: "Bình xịt trang trí dùng trong các dịp tổ chức tiệc.",
-    basePrice: 30000,
-    salePrice: null,
-    status: "visible",
-    featured: false,
-    imageIds: [],
-    availableSizes: [],
-    availableFillings: [],
-    variants: [],
-  },
-  {
-    name: "Bong bóng",
-    kind: "accessory",
-    category: "Phụ kiện trang trí",
-    occasions: ["Sinh nhật", "Kỷ niệm", "Chúc mừng"],
-    description: "Bong bóng trang trí đi kèm bánh kem.",
+    description: "Nón sinh nhật trang trí tiệc.",
     basePrice: 20000,
     salePrice: null,
     status: "visible",
@@ -188,40 +188,124 @@ const defaultProducts = [
   },
 ];
 
+// Các URL ảnh Unsplash
+const imageUrlsByProduct = {
+  "Bánh kem sinh nhật hoa tươi": [
+    "https://plus.unsplash.com/premium_photo-1716918178842-d548932c80a7?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1717014573291-f26c91e2ca58?q=80&w=1422&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh kem socola": [
+    "https://plus.unsplash.com/premium_photo-1687969682937-c62c7f32ed56?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1687969682028-97e42a3c5539?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh kem trái cây": [
+    "https://plus.unsplash.com/premium_photo-1664472680005-b9976125009d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1663133733226-809790756153?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1663133720016-8c4766347a3e?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh mousse matcha": [
+    "https://images.unsplash.com/photo-1736195676924-162ed0fac50b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh Bento": [
+    "https://images.unsplash.com/photo-1651307573144-a2e8df89bd6e?q=80&w=1548&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Strawberry Mousse": [
+    "https://plus.unsplash.com/premium_photo-1672192166785-bdf23cd39734?q=80&w=1548&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1672192166439-f20d9ec1dbbc?q=80&w=1548&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Chocolate Truffle": [
+    "https://images.unsplash.com/photo-1605807646983-377bc5a76493?q=80&w=1448&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "White Lace Wedding": [
+    "https://images.unsplash.com/photo-1629576690723-bb3a22ae7126?q=80&w=1554&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://images.unsplash.com/photo-1614878257906-91bdeb16c470?q=80&w=1574&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+};
+
 async function seedProducts() {
-  const operations = defaultProducts.map((product) => {
-    const {
-      availableSizes,
-      availableFillings,
-      ...insertFields
-    } = product;
-
-    return {
-      updateOne: {
-        filter: { name: product.name },
-        update: {
-          // Chỉ ghi các trường này khi sản phẩm chưa tồn tại (không đè dữ liệu đã chỉnh sửa)
-          $setOnInsert: insertFields,
-          // Luôn đồng bộ kích thước và nhân bánh
-          $set: {
-            availableSizes,
-            availableFillings,
-          },
-        },
-        upsert: true,
-      },
-    };
-  });
-
   try {
+    const operations = [];
+
+    for (const product of defaultProducts) {
+      const urls = imageUrlsByProduct[product.name] || [];
+      const imageIds = [];
+
+      // Validate URL nếu sản phẩm có cấu hình ảnh
+      const invalidUrl = urls.find(
+        (url) =>
+          !url.startsWith("https://images.unsplash.com/") &&
+          !url.startsWith("https://plus.unsplash.com/")
+      );
+
+      if (invalidUrl) {
+        throw new Error(`URL ảnh không hợp lệ: ${invalidUrl}`);
+      }
+
+      for (let i = 0; i < urls.length; i++) {
+        const media = await Media.findOneAndUpdate(
+          { url: urls[i] },
+          {
+            $set: {
+              alt: `${product.name} - ảnh ${i + 1}`,
+              provider: "unsplash",
+              sourceUrl: "https://unsplash.com/",
+              isActive: true,
+            },
+          },
+          {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true,
+            runValidators: true,
+          }
+        );
+
+        imageIds.push(media._id);
+      }
+
+      const {
+        availableSizes,
+        availableFillings,
+        variants,
+        imageIds: _defaultImageIds,
+        ...insertFields
+      } = product;
+
+      const setFields = {
+        availableSizes,
+        availableFillings,
+        variants,
+      };
+
+      if (imageIds.length > 0) {
+        setFields.imageIds = imageIds;
+      } else {
+        insertFields.imageIds = [];
+      }
+
+      operations.push({
+        updateOne: {
+          filter: { name: product.name },
+          update: {
+            $setOnInsert: insertFields,
+            $set: setFields,
+          },
+          upsert: true,
+        },
+      });
+    }
+
     await Product.bulkWrite(operations);
-    const total = await Product.countDocuments();
-    console.log(
-      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
-    );
-    console.log(`Tổng số sản phẩm hiện có: ${total}`);
+
+    const totalProducts = await Product.countDocuments();
+    const totalMedia = await Media.countDocuments();
+
+    console.log("\n========== SEED PRODUCTS THÀNH CÔNG ==========");
+    console.log(`Số sản phẩm mẫu đã kiểm tra: ${defaultProducts.length}`);
+    console.log(`Tổng sản phẩm trong database: ${totalProducts}`);
+    console.log(`Tổng Media trong database: ${totalMedia}`);
   } catch (error) {
-    console.error(`Lỗi khi đồng bộ Products:`, error);
+    console.error("Lỗi khi seed Products:", error);
     throw error;
   }
 }

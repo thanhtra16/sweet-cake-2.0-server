@@ -60,9 +60,12 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    imageIds: [{
-      type: mongoose.Schema.Types.ObjectId,
-    }],
+    imageIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Media",
+      },
+    ],
     availableSizes: {
       type: [String],
       default: [],

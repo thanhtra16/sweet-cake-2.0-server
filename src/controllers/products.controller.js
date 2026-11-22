@@ -71,11 +71,6 @@ const getProducts = async (req, res, next) => {
 
     // Lọc theo giá thực tế
     if (hasMinPrice || hasMaxPrice) {
-      const priceCondition = {};
-
-      if (hasMinPrice) priceCondition.$gte = min;
-      if (hasMaxPrice) priceCondition.$lte = max;
-
       filter.$expr = {
         $and: [
           {
@@ -112,14 +107,10 @@ const getProducts = async (req, res, next) => {
 
     // Phân trang
     const currentPage = Math.max(Number(page) || 1, 1);
-    const pageSize = Math.min(
-      Math.max(Number(limit) || 12, 1),
-      100
-    );
-
+    const pageSize = Math.min(Math.max(Number(limit) || 12, 1), 100);
     const skip = (currentPage - 1) * pageSize;
 
-    // Dùng aggregate để sắp xếp theo giá thực tế
+    // Dùng aggregate để sắp xếp theo giá thực tế và populate imageIds
     const pipeline = [
       { $match: filter },
       {
@@ -132,6 +123,14 @@ const getProducts = async (req, res, next) => {
       { $sort: sortOptions[sort] },
       { $skip: skip },
       { $limit: pageSize },
+      {
+        $lookup: {
+          from: "images",
+          localField: "imageIds",
+          foreignField: "_id",
+          as: "imageIds",
+        },
+      },
       { $project: { effectivePrice: 0 } },
     ];
 
@@ -154,8 +153,6 @@ const getProducts = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 // Lấy danh sách dữ liệu phục vụ bộ lọc sản phẩm
 const getProductFilters = async (req, res, next) => {
@@ -200,7 +197,6 @@ const getProductFilters = async (req, res, next) => {
   }
 };
 
-
 const getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -217,7 +213,9 @@ const getProductById = async (req, res, next) => {
     const product = await Product.findOne({
       _id: id,
       status: "visible",
-    }).lean();
+    })
+      .populate("imageIds")
+      .lean();
 
     if (!product) {
       return res.status(404).json({
@@ -234,7 +232,6 @@ const getProductById = async (req, res, next) => {
     next(error);
   }
 };
-
 
 const getProductCustomization = async (req, res, next) => {
   try {
@@ -273,7 +270,7 @@ const getProductCustomization = async (req, res, next) => {
 };
 
 module.exports = {
-  getProducts, 
+  getProducts,
   getProductFilters,
   getProductById,
   getProductCustomization,

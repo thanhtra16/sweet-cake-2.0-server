@@ -17,30 +17,36 @@ const seedTimeSlots = require("./data/timeslots.seed");
 const seedOrders = require("./data/orders.seed");
 const seedNotifications = require("./data/notifications.seed");
 
+
 const runSeed = async () => {
   try {
-    // Kết nối MongoDB
     await connectDB();
 
+    // Chạy riêng seed sản phẩm nếu có tham số "products"
+    const onlyProducts = process.argv[2] === "products";
+
+    if (onlyProducts) {
+      console.log("\n========== BẮT ĐẦU SEED PRODUCTS ==========\n");
+
+      await seedProducts();
+
+      console.log("\n========== SEED PRODUCTS HOÀN TẤT ==========\n");
+      return;
+    }
+
+    // Mặc định: chạy toàn bộ seed
     console.log("\n========== BẮT ĐẦU SEED DATA ==========\n");
 
-    // Seed cấu hình cửa hàng
     await seedSettings();
-
-  
     await seedAdmin();
     await seedUsers();
-
     await seedCustomizations();
     await seedProducts();
     await seedVouchers();
-
     await seedPosts();
     await seedFAQs();
-
     await seedTimeSlots();
     await seedOrders();
-
     await seedNotifications();
 
     console.log("\n========== SEED DATA HOÀN TẤT ==========\n");
