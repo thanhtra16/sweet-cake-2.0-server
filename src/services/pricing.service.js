@@ -177,9 +177,9 @@ function computeQuote({ items, voucherCode, receiveMethod }, data) {
 
 /** Nạp dữ liệu từ MongoDB rồi tính. deps cho phép thay model khi kiểm thử. */
 async function quote(input, deps = {}) {
-  const Product = deps.Product || require('../models/product.model');
-  const Customization = deps.Customization || require('../models/customization.model');
-  const Settings = deps.Settings || require('../models/settings.model');
+  const Product = deps.Product || require('../models/products');
+  const Customization = deps.Customization || require('../models/customizations');
+  const Settings = deps.Settings || require('../models/settings');
 
   const ids = [...new Set((input.items || []).map((l) => String(l.productId)))];
   const [docs, customization, settings, voucher] = await Promise.all([

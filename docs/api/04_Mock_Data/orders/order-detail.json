@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "data": {
+    "_id": "mock-order-001",
+    "code": "SC-MOCK-0001",
+    "status": "pending_payment",
+    "timeline": [],
+    "cancelRequest": null,
+    "refund": null
+  }
+}
