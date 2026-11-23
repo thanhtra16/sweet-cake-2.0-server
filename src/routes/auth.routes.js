@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 
@@ -9,13 +8,25 @@ const {
   forgotPassword,
   verifyResetOtp,
   resetPasswordController,
+  changePasswordController,
 } = require("../controllers/auth.controller");
 
-const { auth } = require("../middlewares/auth");
+const {
+  auth,
+  requireRole,
+} = require("../middlewares/auth");
 
 router.post("/register", register);
 router.post("/login", login);
 router.get("/me", auth, me);
+
+// Đổi mật khẩu khi đã đăng nhập
+router.post(
+  "/change-password",
+  auth,
+  requireRole("admin"),
+  changePasswordController
+);
 
 // Quên mật khẩu - yêu cầu OTP
 router.post("/forgot-password", forgotPassword);
