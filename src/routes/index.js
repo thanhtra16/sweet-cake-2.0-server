@@ -18,6 +18,7 @@ const productsRoutes = require("./products.routes");
 const orderRoutes = require("./order.routes");
 const reviewRoutes = require("./review.routes");
 const adminReviewRoutes = require("./adminReview.routes");
+
 // API kiểm tra server
 router.use("/", healthRoutes);
 
@@ -40,7 +41,7 @@ router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductsRoutes);
 router.use("/admin/reviews", adminReviewRoutes);
 
-// API hình ảnh, sản phẩm, đơn hàng
+// API hình ảnh, sản phẩm, đơn hàng, đánh giá
 router.use("/images", imagesRoutes);
 router.use("/products", productsRoutes);
 router.use("/orders", orderRoutes);

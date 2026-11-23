@@ -2,7 +2,6 @@ const bcrypt = require("bcryptjs");
 const { User } = require("../models");
 const { signToken } = require("../utils/jwt");
 const { successResponse, errorResponse } = require("../utils/response");
-
 const {
   requestPasswordReset,
   verifyResetOTP,
@@ -163,7 +162,7 @@ const me = (req, res) =>
     { user: publicUser(req.user) }
   );
 
-// Đổi mật khẩu khi admin đã đăng nhập
+// Đổi mật khẩu khi đã đăng nhập
 const changePasswordController = async (req, res) => {
   try {
     const {

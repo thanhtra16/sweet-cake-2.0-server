@@ -28,13 +28,9 @@ router.post(
   changePasswordController
 );
 
-// Quên mật khẩu - yêu cầu OTP
+// Quên mật khẩu: yêu cầu OTP -> xác minh OTP -> đặt lại mật khẩu
 router.post("/forgot-password", forgotPassword);
-
-// Xác minh OTP quên mật khẩu
 router.post("/verify-reset-otp", verifyResetOtp);
-
-// Đặt lại mật khẩu
 router.post("/reset-password", resetPasswordController);
 
 module.exports = router;
