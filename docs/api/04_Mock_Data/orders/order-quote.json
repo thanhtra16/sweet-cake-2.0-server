@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "valid": true,
+        "reason": null,
+        "unitPrice": 350000,
+        "priceChanged": false
+      }
+    ],
+    "subtotal": 350000,
+    "discount": 0,
+    "deliveryFee": 0,
+    "total": 350000
+  }
+}
