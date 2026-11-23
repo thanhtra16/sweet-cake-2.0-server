@@ -10,6 +10,7 @@ const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
 const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
+const adminUserRoutes = require("./admin-user.routes");
 const productsRoutes = require("./products.routes");
 
 // Đăng ký các nhóm API
@@ -27,7 +28,10 @@ router.use("/faqs", faqRoutes);
 // API thông báo
 router.use("/notifications", notificationRoutes);
 
-// API Admin quản lý khách hàng
+// API Admin
 router.use("/admin", adminRoutes);
+
+// API quản trị khách hàng
+router.use("/admin/users", adminUserRoutes);
 
 module.exports = router;
