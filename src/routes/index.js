@@ -10,6 +10,7 @@ const faqRoutes = require("./faq.routes");
 const blogRoutes = require("./blog.routes");
 const notificationRoutes = require("./notification.routes");
 const adminRoutes = require("./admin.routes");
+const adminUserRoutes = require("./admin-user.routes");
 const adminCustomizationRoutes = require("./adminCustomization.routes");
 const adminOrderRoutes = require("./adminOrder.routes");
 const adminProductsRoutes = require("./adminProducts.routes");
@@ -36,6 +37,7 @@ router.use("/notifications", notificationRoutes);
 
 // API Admin
 router.use("/admin", adminRoutes);
+router.use("/admin/users", adminUserRoutes);
 router.use("/admin/customizations", adminCustomizationRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductsRoutes);
