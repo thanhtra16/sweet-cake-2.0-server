@@ -1,4 +1,3 @@
-
 const { Notification } = require("../models");
 
 const notify = async ({
@@ -29,4 +28,4 @@ const notify = async ({
 
 module.exports = {
   notify,
-}
+};

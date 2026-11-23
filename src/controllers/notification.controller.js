@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 const { Notification } = require("../models");
 const {
@@ -105,4 +104,4 @@ module.exports = {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
-}
+};
