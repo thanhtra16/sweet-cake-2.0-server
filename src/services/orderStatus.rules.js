@@ -225,8 +225,11 @@ function planTransition(order, to, opts = {}) {
   }
 
   const historyEntry = {
-    from, to, by: actor.type, byUserId: actor.id || null, at: now,
-    reasonCode, reason: isNonEmpty(reason) ? reason.trim() : null,
+    from,
+    to,
+    actor: actor.type,
+    time: now,
+    reason: isNonEmpty(reason) ? reason.trim() : "",
   };
 
   return {

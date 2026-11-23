@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "_id": "mock-product-001",
+        "name": "Bánh kem dâu",
+        "kind": "cake",
+        "basePrice": 350000,
+        "status": "visible",
+        "imageIds": [
+          "mock-image-strawberry-cake"
+        ]
+      },
+      {
+        "_id": "mock-product-002",
+        "name": "Bánh tiramisu",
+        "kind": "cake",
+        "basePrice": 280000,
+        "status": "visible",
+        "imageIds": [
+          "mock-image-tiramisu"
+        ]
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 12,
+      "totalItems": 2,
+      "totalPages": 1
+    }
+  }
+}

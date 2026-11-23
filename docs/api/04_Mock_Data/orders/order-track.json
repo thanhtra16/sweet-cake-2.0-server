@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "order": {
+      "_id": "mock-order-001",
+      "code": "SC-MOCK-0001",
+      "status": "pending_payment",
+      "total": 350000
+    },
+    "trackToken": "MOCK_TRACK_TOKEN"
+  }
+}

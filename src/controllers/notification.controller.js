@@ -1,69 +1,107 @@
-const notificationService = require("../services/notification.service");
-const { errorResponse } = require("../utils/response");
+const mongoose = require("mongoose");
+const { Notification } = require("../models");
+const {
+  successResponse,
+  errorResponse,
+} = require("../utils/response");
 
-/** Lỗi nghiệp vụ có statusCode (400/404...) thì trả theo định dạng chung, còn lại chuyển cho errorHandler. */
-function handleError(error, res, next) {
-  if (error.statusCode) {
-    return errorResponse(res, error.message, error.statusCode);
-  }
-  return next(error);
-}
-
-/** req.user do middleware auth gắn vào (document User). */
-function getUserId(req) {
-  return req.user._id;
-}
-
-// GET /api/notifications
-async function getMyNotifications(req, res, next) {
+// 1. GET /notifications
+// Lấy danh sách thông báo của người dùng đang đăng nhập
+const getNotifications = async (req, res, next) => {
   try {
-    const notifications = await notificationService.listByUser(getUserId(req));
+    const notifications = await Notification.find({
+      userId: req.user._id,
+    }).sort({ createdAt: -1 });
 
-    res.json({
-      success: true,
-      message: "Lấy danh sách thông báo thành công",
-      data: { notifications },
-    });
+    return successResponse(
+      res,
+      { notifications },
+      "Lấy danh sách thông báo thành công"
+    );
   } catch (error) {
-    handleError(error, res, next);
+    next(error);
   }
-}
+};
 
-// PATCH /api/notifications/:id/read
-async function markNotificationAsRead(req, res, next) {
+// 2. GET /notifications/unread-count
+// Đếm số thông báo chưa đọc
+const getUnreadCount = async (req, res, next) => {
   try {
-    const notification = await notificationService.markAsRead(
-      getUserId(req),
-      req.params.id
+    const count = await Notification.countDocuments({
+      userId: req.user._id,
+      read: false,
+    });
+
+    return successResponse(
+      res,
+      { unreadCount: count },
+      "Lấy số thông báo chưa đọc thành công"
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 3. PATCH /notifications/:id/read
+// Đánh dấu một thông báo đã đọc
+const markAsRead = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, "ID thông báo không hợp lệ", 400);
+    }
+
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: id,
+        userId: req.user._id,
+      },
+      { read: true },
+      { new: true }
     );
 
-    res.json({
-      success: true,
-      message: "Đã đánh dấu thông báo là đã đọc",
-      data: { notification },
-    });
-  } catch (error) {
-    handleError(error, res, next);
-  }
-}
+    if (!notification) {
+      return errorResponse(res, "Không tìm thấy thông báo", 404);
+    }
 
-// PATCH /api/notifications/read-all
-async function markAllNotificationsAsRead(req, res, next) {
+    return successResponse(
+      res,
+      { notification },
+      "Đánh dấu thông báo đã đọc thành công"
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 4. PATCH /notifications/read-all
+// Đánh dấu tất cả thông báo đã đọc
+const markAllAsRead = async (req, res, next) => {
   try {
-    const result = await notificationService.markAllAsRead(getUserId(req));
+    const result = await Notification.updateMany(
+      {
+        userId: req.user._id,
+        read: false,
+      },
+      { $set: { read: true } }
+    );
 
-    res.json({
-      success: true,
-      message: "Đã đánh dấu tất cả thông báo là đã đọc",
-      data: result,
-    });
+    return successResponse(
+      res,
+      {
+        modifiedCount: result.modifiedCount,
+      },
+      "Đánh dấu tất cả thông báo đã đọc thành công"
+    );
   } catch (error) {
-    handleError(error, res, next);
+    next(error);
   }
-}
+};
 
 module.exports = {
-  getMyNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
+  getNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
 };

@@ -1,3 +1,6 @@
+const dns = require("node:dns");
+dns.setServers(["1.1.1.1"]);
+
 const mongoose = require("mongoose");
 const connectDB = require("../config/database");
 
