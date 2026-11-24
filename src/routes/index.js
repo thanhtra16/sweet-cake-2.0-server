@@ -37,8 +37,7 @@ router.use("/faqs", faqRoutes);
 router.use("/blogs", blogRoutes);
 router.use("/notifications", notificationRoutes);
 
-// API Admin
-router.use("/admin", adminRoutes);
+// API Admin (đặt các route con cụ thể TRƯỚC /admin chung)
 router.use("/admin/users", adminUserRoutes);
 router.use("/admin/time-slots", adminTimeSlotRoutes);
 router.use("/admin/vouchers", adminVoucherRoutes);
@@ -46,6 +45,7 @@ router.use("/admin/customizations", adminCustomizationRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductsRoutes);
 router.use("/admin/reviews", adminReviewRoutes);
+router.use("/admin", adminRoutes);
 
 // API hình ảnh, sản phẩm, đơn hàng, đánh giá
 router.use("/images", imagesRoutes);

@@ -1,5 +1,10 @@
+const mongoose = require("mongoose");
 const adminOrderService = require("../services/adminOrder.service");
 const { Order } = require("../models");
+
+function isValidId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
 
 async function getOrders(req, res, next) {
   try {
@@ -56,6 +61,10 @@ async function createProductionTicket(req, res, next) {
     const adminId = req.user ? req.user._id : null;
     const orderId = req.params.id;
 
+    if (!isValidId(orderId)) {
+      return res.status(400).json({ success: false, message: "ID đơn hàng không hợp lệ." });
+    }
+
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
@@ -88,6 +97,11 @@ async function createProductionTicket(req, res, next) {
 async function getProductionTicket(req, res, next) {
   try {
     const orderId = req.params.id;
+
+    if (!isValidId(orderId)) {
+      return res.status(400).json({ success: false, message: "ID đơn hàng không hợp lệ." });
+    }
+
     const order = await Order.findById(orderId).populate("items.productId slotId");
 
     if (!order) {
@@ -119,6 +133,10 @@ async function updateOrderPhotos(req, res, next) {
     const orderId = req.params.id;
     const { photoIds } = req.body;
 
+    if (!isValidId(orderId)) {
+      return res.status(400).json({ success: false, message: "ID đơn hàng không hợp lệ." });
+    }
+
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
@@ -149,6 +167,10 @@ async function updateOrderStatus(req, res, next) {
   try {
     const orderId = req.params.id;
     const { nextStatus, reason } = req.body;
+
+    if (!isValidId(orderId)) {
+      return res.status(400).json({ success: false, message: "ID đơn hàng không hợp lệ." });
+    }
 
     const order = await Order.findById(orderId);
     if (!order) {

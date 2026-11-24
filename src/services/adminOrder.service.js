@@ -1,19 +1,28 @@
+const mongoose = require("mongoose");
 const { Order, Setting } = require("../models");
 const AppError = require("../utils/AppError");
 const { transitionOrder } = require("./orderStatus.service");
+
+function ensureValidObjectId(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError(400, "INVALID_ORDER_ID", "ID đơn hàng không hợp lệ.");
+  }
+}
 
 // Gắn thêm cờ cảnh báo quá hạn hoàn tiền (> 3 ngày hoặc quá dueAt)
 function enrichOrderFlags(orderDoc) {
   const order = orderDoc.toObject ? orderDoc.toObject() : { ...orderDoc };
   const now = new Date();
+  const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
 
   let isRefundOverdue = false;
   if (order.refund && order.refund.status === "pending") {
     if (order.refund.dueAt) {
       isRefundOverdue = now > new Date(order.refund.dueAt);
     } else if (order.cancellation && order.cancellation.at) {
-      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-      isRefundOverdue = now - new Date(order.cancellation.at) > threeDaysMs;
+      isRefundOverdue = now.getTime() - new Date(order.cancellation.at).getTime() > threeDaysMs;
+    } else if (order.updatedAt) {
+      isRefundOverdue = now.getTime() - new Date(order.updatedAt).getTime() > threeDaysMs;
     }
   }
 
@@ -30,39 +39,52 @@ async function getAdminOrders(query = {}) {
   const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 15));
   const skip = (pageNum - 1) * limitNum;
 
-  const filter = {};
+  const andConditions = [];
 
   if (status) {
-    filter.status = status;
+    andConditions.push({ status });
   }
 
   if (hasCancelRequest === "true" || hasCancelRequest === true) {
-    filter["cancelRequest.status"] = "pending";
+    andConditions.push({ "cancelRequest.status": "pending" });
   }
 
   if (refundOverdue === "true" || refundOverdue === true) {
-    filter["refund.status"] = "pending";
-    filter["refund.dueAt"] = { $lt: new Date() };
+    const now = new Date();
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    andConditions.push({
+      "refund.status": "pending",
+      $or: [
+        { "refund.dueAt": { $lt: now } },
+        { "refund.dueAt": { $exists: false }, "cancellation.at": { $lt: threeDaysAgo } },
+        { "refund.dueAt": null, "cancellation.at": { $lt: threeDaysAgo } },
+      ],
+    });
   }
 
   if (from || to) {
-    filter.createdAt = {};
-    if (from) filter.createdAt.$gte = new Date(from);
+    const createdAtFilter = {};
+    if (from) createdAtFilter.$gte = new Date(from);
     if (to) {
       const endDate = new Date(to);
       endDate.setHours(23, 59, 59, 999);
-      filter.createdAt.$lte = endDate;
+      createdAtFilter.$lte = endDate;
     }
+    andConditions.push({ createdAt: createdAtFilter });
   }
 
   if (search) {
     const cleanSearch = String(search).trim();
-    filter.$or = [
-      { code: new RegExp(cleanSearch, "i") },
-      { "receiver.fullName": new RegExp(cleanSearch, "i") },
-      { "receiver.phone": new RegExp(cleanSearch, "i") },
-    ];
+    andConditions.push({
+      $or: [
+        { code: new RegExp(cleanSearch, "i") },
+        { "receiver.fullName": new RegExp(cleanSearch, "i") },
+        { "receiver.phone": new RegExp(cleanSearch, "i") },
+      ],
+    });
   }
+
+  const filter = andConditions.length > 0 ? { $and: andConditions } : {};
 
   const [rawItems, total] = await Promise.all([
     Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
@@ -78,6 +100,7 @@ async function getAdminOrders(query = {}) {
 }
 
 async function getAdminOrderById(orderId) {
+  ensureValidObjectId(orderId);
   const order = await Order.findById(orderId).lean();
   if (!order) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
@@ -86,6 +109,7 @@ async function getAdminOrderById(orderId) {
 }
 
 async function confirmPaymentManual(orderId, adminId) {
+  ensureValidObjectId(orderId);
   const order = await Order.findById(orderId);
   if (!order) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
@@ -110,6 +134,7 @@ async function confirmPaymentManual(orderId, adminId) {
 }
 
 async function acceptOrder(orderId, adminId) {
+  ensureValidObjectId(orderId);
   const updated = await transitionOrder(orderId, "accepted", {
     actor: { type: "admin", id: adminId },
   });
@@ -117,6 +142,7 @@ async function acceptOrder(orderId, adminId) {
 }
 
 async function rejectOrCancelOrder(orderId, { reasonCode, reason, cause } = {}, adminId) {
+  ensureValidObjectId(orderId);
   const order = await Order.findById(orderId).lean();
   if (!order) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
@@ -142,6 +168,7 @@ async function rejectOrCancelOrder(orderId, { reasonCode, reason, cause } = {}, 
 
 // 1. Admin duyệt hoặc từ chối yêu cầu hủy của khách (POST /cancel-request/decision)
 async function decideCancelRequest(orderId, { decision, decisionReason, cause } = {}, adminId) {
+  ensureValidObjectId(orderId);
   if (!["accepted", "rejected"].includes(decision)) {
     throw new AppError(400, "VALIDATION_ERROR", "Quyết định phải là 'accepted' hoặc 'rejected'.");
   }
@@ -200,6 +227,7 @@ async function decideCancelRequest(orderId, { decision, decisionReason, cause } 
 
 // 2. Hủy đặc biệt từ phía cửa hàng - hoàn 100% (POST /special-cancel)
 async function specialCancelOrder(orderId, { reason, cause = "shop_fault" } = {}, adminId) {
+  ensureValidObjectId(orderId);
   const cleanReason = String(reason || "").trim();
   if (!cleanReason) {
     throw new AppError(400, "CANCEL_REASON_REQUIRED", "Vui lòng nhập lý do hủy đặc biệt.");
@@ -213,7 +241,6 @@ async function specialCancelOrder(orderId, { reason, cause = "shop_fault" } = {}
   const now = new Date();
   const patch = {};
 
-  // Nếu đang có yêu cầu hủy treo thì đóng luôn kèm theo quyết định chấp nhận
   if (order.cancelRequest && order.cancelRequest.status === "pending") {
     patch["cancelRequest.status"] = "accepted";
     patch["cancelRequest.decidedBy"] = adminId;
@@ -225,7 +252,7 @@ async function specialCancelOrder(orderId, { reason, cause = "shop_fault" } = {}
     actor: { type: "admin", id: adminId },
     reasonCode: "other",
     reason: cleanReason,
-    cause, // 'shop_fault' sẽ kích hoạt hoàn 100% trong orderStatus.rules.js
+    cause, // 'shop_fault' kích hoạt hoàn 100% trong orderStatus.rules.js
     patch,
     now,
   });
@@ -235,6 +262,7 @@ async function specialCancelOrder(orderId, { reason, cause = "shop_fault" } = {}
 
 // 3. Xác nhận hoàn tiền thủ công cho khách (POST /refund/confirm)
 async function confirmRefund(orderId, { amount, adjustReason } = {}, adminId) {
+  ensureValidObjectId(orderId);
   const order = await Order.findById(orderId);
   if (!order) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
