@@ -6,14 +6,17 @@ const { requireAdmin } = require("../middlewares/requireAdmin");
 
 // Tạm bỏ qua xác thực để test giao diện Admin trên local (sau khi test xong nhớ mở lại dòng dưới)
 // router.use(auth, requireAdmin);
-router.use((req, res, next) => {
-  req.user = {
-    _id: "650000000000000000000001",
-    role: "admin",
-    fullName: "Admin SweetCake"
-  };
-  next();
-});
+// router.use((req, res, next) => {
+//   req.user = {
+//     _id: "650000000000000000000001",
+//     role: "admin",
+//     fullName: "Admin SweetCake"
+//   };
+//   next();
+// });
+
+// Bắt buộc đăng nhập và có quyền Admin
+router.use(auth, requireAdmin);
 
 router.get("/", adminOrderController.getOrders);
 router.get("/:id", adminOrderController.getOrderById);

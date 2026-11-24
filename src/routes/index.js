@@ -9,7 +9,6 @@ const postRoutes = require("./post.routes");
 const faqRoutes = require("./faq.routes");
 const blogRoutes = require("./blog.routes");
 const notificationRoutes = require("./notification.routes");
-const adminRoutes = require("./admin.routes");
 const adminUserRoutes = require("./admin-user.routes");
 const adminTimeSlotRoutes = require("./admin-time-slot.routes");
 const adminVoucherRoutes = require("./admin-voucher.routes");
@@ -37,7 +36,11 @@ router.use("/faqs", faqRoutes);
 router.use("/blogs", blogRoutes);
 router.use("/notifications", notificationRoutes);
 
+<<<<<<< Updated upstream
 // API Admin (đặt các route con cụ thể TRƯỚC /admin chung)
+=======
+// API Admin
+>>>>>>> Stashed changes
 router.use("/admin/users", adminUserRoutes);
 router.use("/admin/time-slots", adminTimeSlotRoutes);
 router.use("/admin/vouchers", adminVoucherRoutes);
