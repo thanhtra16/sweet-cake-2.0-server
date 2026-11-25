@@ -1,3 +1,4 @@
+
 // File tập trung quản lý các route của dự án
 const express = require("express");
 const router = express.Router();
@@ -34,13 +35,11 @@ router.use("/users", userRoutes);
 router.use("/posts", postRoutes);
 router.use("/faqs", faqRoutes);
 router.use("/blogs", blogRoutes);
+
+
 router.use("/notifications", notificationRoutes);
 
-<<<<<<< Updated upstream
-// API Admin (đặt các route con cụ thể TRƯỚC /admin chung)
-=======
 // API Admin
->>>>>>> Stashed changes
 router.use("/admin/users", adminUserRoutes);
 router.use("/admin/time-slots", adminTimeSlotRoutes);
 router.use("/admin/vouchers", adminVoucherRoutes);
@@ -48,12 +47,16 @@ router.use("/admin/customizations", adminCustomizationRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductsRoutes);
 router.use("/admin/reviews", adminReviewRoutes);
-router.use("/admin", adminRoutes);
 
 // API hình ảnh, sản phẩm, đơn hàng, đánh giá
 router.use("/images", imagesRoutes);
 router.use("/products", productsRoutes);
 router.use("/orders", orderRoutes);
 router.use("/reviews", reviewRoutes);
+
+// fix
+// console.log("BLOG ROUTES:", router.stack.some(
+//   (layer) => layer.regexp?.toString().includes("blogs")
+// ));
 
 module.exports = router;

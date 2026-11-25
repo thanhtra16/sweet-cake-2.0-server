@@ -1,6 +1,9 @@
 
 const express = require("express");
 const router = express.Router();
+// fix
+// console.log("BLOG ROUTER ĐÃ ĐƯỢC LOAD");
+// 
 const Blog = require("../models/blog");
 
 // Lấy danh sách bài viết Blog
