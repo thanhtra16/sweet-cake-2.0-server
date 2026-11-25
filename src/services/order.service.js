@@ -66,13 +66,30 @@ function sanitizeOrderForCustomer(orderDoc) {
 }
 
 function getDateKey(value) {
+  if (!value) return null;
+
+  // Nếu là chuỗi YYYY-MM-DD từ frontend,
+  // giữ nguyên ngày, không chuyển qua UTC.
+  if (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return value;
+  }
+
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return null;
   }
 
-  return date.toISOString().slice(0, 10);
+  // Chuyển ngày MongoDB sang ngày Việt Nam (UTC+7).
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 function normalizeOrderItems(items = []) {
@@ -486,6 +503,11 @@ async function createOrder(payload = {}, authContext = {}) {
     );
   }
 
+  // Tạo VietQR mô phỏng ngay sau khi tạo đơn (hiệu lực 10 phút).
+  const paymentService = require("./payment.service");
+  await paymentService.initializeQr(createdOrder);
+  createdOrder = await Order.findById(createdOrder._id);
+
   // Guest cần trackToken để xem đơn sau khi đặt.
   const trackToken = signTrackToken(createdOrder);
 
@@ -625,8 +647,8 @@ async function trackOrderByCodeAndPhone({ code, phone }) {
 }
 
 async function getCustomerOrderById(orderId, authContext) {
-  const order = await assertCustomerOrderAccess(orderId, authContext);
-
+  let order = await assertCustomerOrderAccess(orderId, authContext);
+  order = await require("./payment.service").expireIfNeeded(order);
   return sanitizeOrderForCustomer(order);
 }
 

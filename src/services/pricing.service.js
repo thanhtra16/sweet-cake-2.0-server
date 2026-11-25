@@ -128,12 +128,28 @@ function priceLine(line, product, customization) {
   const unitPrice = round(basePart + surcharges.reduce((s, x) => s + x.amount, 0));
   const priceChanged = Number.isFinite(line.unitPrice) && line.unitPrice !== unitPrice;
 
-  return {
-    valid: true, reason: null, field: null,
-    unitPrice, priceChanged,
+    return {
+    valid: true,
+    reason: null,
+    field: null,
+
+    // Thông tin bắt buộc để tạo Order
+    productId: product._id,
+    kind: product.kind,
+    name: product.name,
+    imageId: product.imageId || null,
+    qty: line.qty,
+
+    // Thông tin cấu hình sản phẩm
+    config: line.config || {},
+
+    // Thông tin giá
+    unitPrice,
+    priceChanged,
     basePrice: product.basePrice,
     salePrice: product.salePrice != null ? product.salePrice : null,
-    surcharges, variant,
+    surcharges,
+    variant,
     lineTotal: unitPrice * line.qty,
   };
 }

@@ -36,6 +36,7 @@ const SYSTEM_CANCEL_REASONS = [
   "payment_timeout",
   "qr_expired",
   "qr_retries_exceeded",
+  "slot_unavailable",
 ];
 const CANCEL_CAUSES = ["shop_fault", "other"]; // BR21
 
