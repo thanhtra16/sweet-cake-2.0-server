@@ -89,7 +89,7 @@ async function initializeQr(order) {
 
 async function handleMockWebhook(orderId, { txnId, result = "success" } = {}) {
   if (!["success", "failed"].includes(result)) throw new AppError(400, "INVALID_PAYMENT_RESULT", "Kết quả thanh toán không hợp lệ.");
-  const order = await Order.findById(orderId);
+  let order = await Order.findById(orderId);
   if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
   const attempt = [...(order.payment?.attempts || [])].reverse().find(a => !txnId || a.txnId === txnId || a.qrCode === txnId);
   if (!attempt) throw new AppError(404, "PAYMENT_ATTEMPT_NOT_FOUND", "Không tìm thấy giao dịch tương ứng.");
