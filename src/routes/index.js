@@ -18,6 +18,7 @@ const adminProductsRoutes = require("./adminProducts.routes");
 const imagesRoutes = require("./images.routes");
 const productsRoutes = require("./products.routes");
 const orderRoutes = require("./order.routes");
+const cartRoutes = require("./cart.routes");
 const reviewRoutes = require("./review.routes");
 const adminReviewRoutes = require("./adminReview.routes");
 
@@ -129,9 +130,10 @@ router.get("/time-slots", async (req, res) => {
   }
 });
 
-// API hình ảnh, sản phẩm, đơn hàng, đánh giá
+// API hình ảnh, sản phẩm, giỏ hàng, đơn hàng, đánh giá
 router.use("/images", imagesRoutes);
 router.use("/products", productsRoutes);
+router.use("/cart", cartRoutes);
 router.use("/orders", orderRoutes);
 router.use("/reviews", reviewRoutes);
 

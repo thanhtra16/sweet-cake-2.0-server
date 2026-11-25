@@ -1,7 +1,11 @@
+const mongoose = require("mongoose");
 const Product = require("../../models/products");
-const Media = require("../../models/media");
+const { getGridFSBucket } = require("../../config/gridfs");
 
 const defaultProducts = [
+  // =========================
+  // BÁNH KEM
+  // =========================
   {
     name: "Bánh kem sinh nhật hoa tươi",
     kind: "cake",
@@ -9,6 +13,8 @@ const defaultProducts = [
     occasions: ["Sinh nhật", "Kỷ niệm"],
     description: "Bánh kem trang trí hoa tươi, phù hợp cho các dịp sinh nhật và kỷ niệm.",
     basePrice: 350000,
+    salePrice: null,
+    status: "visible",
     featured: true,
     imageIds: [],
     availableSizes: ["10cm", "14cm", "18cm", "22cm"],
@@ -22,6 +28,8 @@ const defaultProducts = [
     occasions: ["Sinh nhật", "Kỷ niệm"],
     description: "Bánh kem vị socola với lớp kem mềm mịn.",
     basePrice: 320000,
+    salePrice: null,
+    status: "visible",
     featured: true,
     imageIds: [],
     availableSizes: ["10cm", "14cm", "18cm", "22cm"],
@@ -35,6 +43,8 @@ const defaultProducts = [
     occasions: ["Sinh nhật", "Kỷ niệm", "Chúc mừng"],
     description: "Bánh kem trang trí trái cây tươi, mang hương vị thanh nhẹ.",
     basePrice: 330000,
+    salePrice: null,
+    status: "visible",
     featured: true,
     imageIds: [],
     availableSizes: ["10cm", "14cm", "18cm", "22cm"],
@@ -48,6 +58,8 @@ const defaultProducts = [
     occasions: ["Sinh nhật", "Kỷ niệm"],
     description: "Bánh mousse matcha có kết cấu mềm mịn và hương vị trà xanh.",
     basePrice: 300000,
+    salePrice: null,
+    status: "visible",
     featured: false,
     imageIds: [],
     availableSizes: ["10cm", "14cm", "18cm", "22cm"],
@@ -136,6 +148,12 @@ const defaultProducts = [
       { label: "Số 1", attributes: { number: 1 }, active: true },
       { label: "Số 2", attributes: { number: 2 }, active: true },
       { label: "Số 3", attributes: { number: 3 }, active: true },
+      { label: "Số 4", attributes: { number: 4 }, active: true },
+      { label: "Số 5", attributes: { number: 5 }, active: true },
+      { label: "Số 6", attributes: { number: 6 }, active: true },
+      { label: "Số 7", attributes: { number: 7 }, active: true },
+      { label: "Số 8", attributes: { number: 8 }, active: true },
+      { label: "Số 9", attributes: { number: 9 }, active: true },
     ],
   },
   {
@@ -177,8 +195,139 @@ const defaultProducts = [
   },
 ];
 
-// Các URL ảnh Unsplash
+// Các URL ảnh Unsplash (mỗi sản phẩm là một mảng URL).
+// Tên key phải trùng chính xác với "name" trong defaultProducts.
+// Sản phẩm nào không có ở đây sẽ được bỏ qua phần ảnh.
 const imageUrlsByProduct = {
   "Bánh kem sinh nhật hoa tươi": [
-    "https://plus.unsplash.com/premium_photo-1716918178842-d548932c80a7?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
-    "
+    "https://plus.unsplash.com/premium_photo-1716918178842-d548932c80a7?q=80&w=1471&auto=format&fit=crop",
+    // Thêm URL khác của sản phẩm này tại đây
+  ],
+  // "Bánh kem socola": ["https://..."],
+  // "Bánh kem trái cây": ["https://..."],
+  // "Bánh mousse matcha": ["https://..."],
+  // "Bánh Bento": ["https://..."],
+  // "Strawberry Mousse": ["https://..."],
+  // "Chocolate Truffle": ["https://..."],
+  // "White Lace Wedding": ["https://..."],
+};
+
+// Tải ảnh từ URL và upload vào GridFS (purpose = "product")
+async function uploadImageFromUrl(url, productId, filename) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.startsWith("image/")) {
+    throw new Error(`Không phải ảnh (${contentType})`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const bucket = getGridFSBucket();
+  const imageId = new mongoose.Types.ObjectId();
+
+  await new Promise((resolve, reject) => {
+    const stream = bucket.openUploadStreamWithId(imageId, filename, {
+      contentType,
+      metadata: {
+        purpose: "product",
+        targetId: productId,
+        uploadedAt: new Date(),
+      },
+    });
+    stream.on("error", reject);
+    stream.on("finish", resolve);
+    stream.end(buffer);
+  });
+
+  return imageId;
+}
+
+async function seedProductImages() {
+  for (const [name, urls] of Object.entries(imageUrlsByProduct)) {
+    const product = await Product.findOne({ name });
+
+    if (!product) {
+      console.warn(`Bỏ qua ảnh: không tìm thấy sản phẩm "${name}"`);
+      continue;
+    }
+
+    // Đã có ảnh (seed trước đó hoặc Admin upload) thì không tải lại
+    if (product.imageIds.length > 0) {
+      continue;
+    }
+
+    const newIds = [];
+
+    for (const [index, url] of urls.entries()) {
+      try {
+        const id = await uploadImageFromUrl(
+          url,
+          product._id,
+          `${name}-${index + 1}.jpg`
+        );
+        newIds.push(id);
+      } catch (error) {
+        console.warn(
+          `Không tải được ảnh ${index + 1} của "${name}": ${error.message}`
+        );
+      }
+    }
+
+    if (newIds.length > 0) {
+      await Product.updateOne(
+        { _id: product._id },
+        { $addToSet: { imageIds: { $each: newIds } } }
+      );
+      console.log(`Đã gắn ${newIds.length} ảnh cho "${name}"`);
+    }
+  }
+}
+
+async function seedProducts() {
+  const operations = defaultProducts.map((product) => {
+    const {
+      availableSizes,
+      availableFillings,
+      variants,
+      ...insertFields
+    } = product;
+
+    return {
+      updateOne: {
+        filter: { name: product.name },
+        update: {
+          // Chỉ ghi các trường này khi tạo sản phẩm mới.
+          // Không ghi đè imageIds đã được Admin upload.
+          $setOnInsert: insertFields,
+
+          // Đồng bộ dữ liệu cấu hình từ file seed khi chạy lại.
+          $set: {
+            availableSizes,
+            availableFillings,
+            variants,
+          },
+        },
+        upsert: true,
+      },
+    };
+  });
+
+  try {
+    await Product.bulkWrite(operations);
+    await seedProductImages();
+
+    const total = await Product.countDocuments();
+    console.log(
+      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
+    );
+    console.log(`Tổng số sản phẩm hiện có: ${total}`);
+  } catch (error) {
+    console.error("Lỗi khi đồng bộ Products:", error);
+    throw error;
+  }
+}
+
+module.exports = seedProducts;
