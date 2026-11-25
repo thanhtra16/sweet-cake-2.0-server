@@ -11,7 +11,7 @@ const errorHandler = require("./middlewares/errorHandler");
 const app = express();
 
 // 1. Bảo mật HTTP headers
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 // 2. Cho phép Frontend gọi API
 app.use(cors());

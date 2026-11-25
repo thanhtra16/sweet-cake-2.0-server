@@ -18,6 +18,7 @@ const adminProductsRoutes = require("./adminProducts.routes");
 const imagesRoutes = require("./images.routes");
 const productsRoutes = require("./products.routes");
 const orderRoutes = require("./order.routes");
+const cartRoutes = require("./cart.routes");
 const reviewRoutes = require("./review.routes");
 const adminReviewRoutes = require("./adminReview.routes");
 
@@ -36,11 +37,7 @@ router.use("/faqs", faqRoutes);
 router.use("/blogs", blogRoutes);
 router.use("/notifications", notificationRoutes);
 
-<<<<<<< Updated upstream
 // API Admin (đặt các route con cụ thể TRƯỚC /admin chung)
-=======
-// API Admin
->>>>>>> Stashed changes
 router.use("/admin/users", adminUserRoutes);
 router.use("/admin/time-slots", adminTimeSlotRoutes);
 router.use("/admin/vouchers", adminVoucherRoutes);
@@ -48,11 +45,12 @@ router.use("/admin/customizations", adminCustomizationRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/products", adminProductsRoutes);
 router.use("/admin/reviews", adminReviewRoutes);
-router.use("/admin", adminRoutes);
+// router.use("/admin", adminRoutes);
 
-// API hình ảnh, sản phẩm, đơn hàng, đánh giá
+// API hình ảnh, sản phẩm, giỏ hàng, đơn hàng, đánh giá
 router.use("/images", imagesRoutes);
 router.use("/products", productsRoutes);
+router.use("/cart", cartRoutes);
 router.use("/orders", orderRoutes);
 router.use("/reviews", reviewRoutes);
 
