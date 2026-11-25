@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { Order, Setting } = require("../models");
+const { Order, Setting, TimeSlot } = require("../models");
 const AppError = require("../utils/AppError");
 const { transitionOrder } = require("./orderStatus.service");
 
@@ -115,11 +115,37 @@ async function confirmPaymentManual(orderId, adminId) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
   }
 
+  const now = new Date();
+  if (order.status === "cancelled") {
+    order.payment.status = "paid";
+    order.payment.paidAt = now;
+    order.payment.confirmedBy = "admin";
+    order.payment.latePayment = true;
+    order.payment.latePaymentStatus = "refund_required";
+    order.refund = { source: "late_payment", reason: "Admin xác minh tiền đã nhận sau khi đơn bị hủy", status: "pending", suggestedAmount: order.total, amount: null, dueAt: null };
+    await order.save();
+    return enrichOrderFlags(order);
+  }
   if (order.status !== "pending_payment") {
     throw new AppError(409, "INVALID_STATUS", "Đơn hàng không ở trạng thái chờ thanh toán.");
   }
+  const slot = await TimeSlot.findById(order.slotId).lean();
+  if (!slot || slot.closed || order.payment?.slotHeld !== true) {
+    const cancelled = await transitionOrder(order._id.toString(), "cancelled", {
+      actor: { type: "system", id: null },
+      reasonCode: "qr_retries_exceeded",
+      reason: "Khung giờ không còn được giữ hợp lệ khi Admin đối soát.",
+    });
+    cancelled.payment.status = "paid";
+    cancelled.payment.paidAt = now;
+    cancelled.payment.confirmedBy = "admin";
+    cancelled.payment.latePayment = true;
+    cancelled.payment.latePaymentStatus = "refund_required";
+    cancelled.refund = { source: "late_payment", reason: "Đã nhận tiền nhưng khung giờ không còn hợp lệ", status: "pending", suggestedAmount: cancelled.total, amount: null, dueAt: null };
+    await cancelled.save();
+    return enrichOrderFlags(cancelled);
+  }
 
-  const now = new Date();
   const updated = await transitionOrder(order._id.toString(), "pending_approval", {
     actor: { type: "admin", id: adminId },
     patch: {
@@ -294,6 +320,7 @@ async function confirmRefund(orderId, { amount, adjustReason } = {}, adminId) {
 
   if (order.payment && order.payment.status === "paid") {
     order.payment.status = "refunded";
+    if (order.payment.latePayment) order.payment.latePaymentStatus = "refunded";
   }
 
   await order.save();

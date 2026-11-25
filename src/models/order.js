@@ -88,18 +88,15 @@ const statusHistorySchema = new mongoose.Schema({
 });
 
 const paymentAttemptSchema = new mongoose.Schema({
-  qrCode: {
-    type: String,
-    default: null,
-  },
+  qrCode: { type: String, default: null },
+  qrDataUrl: { type: String, default: null },
+  qrPayload: { type: String, default: null },
+  txnId: { type: String, default: null },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  deadlineAt: {
-    type: Date,
-    default: null,
-  },
+  deadlineAt: { type: Date, default: null },
   result: {
     type: String,
     enum: ["pending", "success", "failed", "expired"],
@@ -283,10 +280,9 @@ const orderSchema = new mongoose.Schema(
         enum: ["webhook", "admin"],
         default: null,
       },
-      latePayment: {
-        type: Boolean,
-        default: false,
-      },
+      latePayment: { type: Boolean, default: false },
+      recreateCount: { type: Number, default: 0 },
+      latePaymentStatus: { type: String, enum: ["none", "refund_required", "refund_pending", "refunded"], default: "none" },
     },
 
     productionTicket: {
@@ -341,6 +337,7 @@ const orderSchema = new mongoose.Schema(
 
     refund: {
       source: String,
+      reason: String,
       status: {
         type: String,
         enum: ["pending", "processed", "rejected", null],
