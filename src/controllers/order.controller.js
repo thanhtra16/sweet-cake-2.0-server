@@ -170,6 +170,23 @@ async function quoteOrder(req, res, next) {
   }
 }
 
+
+async function createPaymentQr(req, res, next) {
+  try {
+    const authContext = extractAuthContext(req);
+    await orderService.getCustomerOrderById(req.params.id, authContext);
+    const result = await require("../services/payment.service").createQr(req.params.id);
+    return res.status(201).json({ success: true, data: result });
+  } catch (err) { return next(err); }
+}
+
+async function mockPaymentWebhook(req, res, next) {
+  try {
+    const result = await require("../services/payment.service").handleMockWebhook(req.params.id, req.body || {});
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return next(err); }
+}
+
 module.exports = {
   getOrders,
   createOrder,
@@ -179,4 +196,6 @@ module.exports = {
   createCancelRequest,
   reorder,
   quoteOrder,
+  createPaymentQr,
+  mockPaymentWebhook,
 };
