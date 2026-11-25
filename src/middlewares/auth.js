@@ -40,37 +40,50 @@ const requireRole =
   };
 
   
+
 const optionalAuth = async (req, res, next) => {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ")
     ? header.slice(7)
     : null;
 
-  // Không có token: cho phép truy cập ảnh công khai
   if (!token) {
     return next();
   }
 
+  let payload;
+
   try {
-    const payload = verifyToken(token);
+    payload = verifyToken(token);
+  } catch {
+    return errorResponse(res, "Token không hợp lệ hoặc đã hết hạn", 401);
+  }
+
+  try {
     const user = await User.findById(payload.id);
 
-    if (
-      user &&
-      !user.isLocked &&
-      !(
-        user.passwordChangedAt &&
-        payload.iat <
-          Math.floor(user.passwordChangedAt.getTime() / 1000)
-      )
-    ) {
-      req.user = user;
+    if (!user) {
+      return errorResponse(res, "Phiên đăng nhập không hợp lệ", 401);
     }
 
+    if (user.isLocked) {
+      return errorResponse(res, "Tài khoản đã bị khóa", 403);
+    }
+
+    if (
+      user.passwordChangedAt &&
+      payload.iat <
+        Math.floor(user.passwordChangedAt.getTime() / 1000)
+    ) {
+      return errorResponse(res, "Phiên đăng nhập đã hết hạn", 401);
+    }
+
+    req.user = user;
     return next();
   } catch (error) {
-    return next();
+    return next(error);
   }
 };
+
 
 module.exports = { auth, requireRole, optionalAuth };
