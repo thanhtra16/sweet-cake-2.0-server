@@ -1,3 +1,4 @@
+
 // File tập trung quản lý các route của dự án
 const express = require("express");
 const router = express.Router();
@@ -35,6 +36,8 @@ router.use("/users", userRoutes);
 router.use("/posts", postRoutes);
 router.use("/faqs", faqRoutes);
 router.use("/blogs", blogRoutes);
+
+
 router.use("/notifications", notificationRoutes);
 
 // API Admin
@@ -136,5 +139,10 @@ router.use("/products", productsRoutes);
 router.use("/cart", cartRoutes);
 router.use("/orders", orderRoutes);
 router.use("/reviews", reviewRoutes);
+
+// fix
+// console.log("BLOG ROUTES:", router.stack.some(
+//   (layer) => layer.regexp?.toString().includes("blogs")
+// ));
 
 module.exports = router;
