@@ -108,7 +108,7 @@ async function getAdminOrderById(orderId) {
   return enrichOrderFlags(order);
 }
 
-async function confirmPaymentManual(orderId, adminId) {
+async function confirmPaymentManual(orderId, adminId, { txnId, evidence, note = "" } = {}) {
   ensureValidObjectId(orderId);
   const order = await Order.findById(orderId);
   if (!order) {
@@ -116,10 +116,36 @@ async function confirmPaymentManual(orderId, adminId) {
   }
 
   const now = new Date();
+  const transactionId = String(txnId || "").trim();
+  const hasEvidence = typeof evidence === "string"
+    ? evidence.trim().length > 0
+    : Array.isArray(evidence) ? evidence.length > 0
+    : Boolean(evidence && typeof evidence === "object");
+  if (!transactionId || !hasEvidence) {
+    throw new AppError(
+      400,
+      "PAYMENT_EVIDENCE_REQUIRED",
+      "Admin cần nhập mã giao dịch và cung cấp bằng chứng thanh toán trước khi xác nhận.",
+    );
+  }
+
+  const manualVerification = {
+    transactionId,
+    evidence,
+    note: String(note || "").trim(),
+    verifiedAt: now,
+    verifiedBy: adminId || null,
+  };
+  // Idempotent: không ghi nhận lại một giao dịch đã được Admin xác minh.
+  if (order.payment?.status === "paid") {
+    return enrichOrderFlags(order);
+  }
   if (order.status === "cancelled") {
     order.payment.status = "paid";
     order.payment.paidAt = now;
     order.payment.confirmedBy = "admin";
+    order.payment.txnId = transactionId;
+    order.payment.manualVerification = manualVerification;
     order.payment.latePayment = true;
     order.payment.latePaymentStatus = "refund_required";
     order.refund = { source: "late_payment", reason: "Admin xác minh tiền đã nhận sau khi đơn bị hủy", status: "pending", suggestedAmount: order.total, amount: null, dueAt: null };
@@ -139,6 +165,8 @@ async function confirmPaymentManual(orderId, adminId) {
     cancelled.payment.status = "paid";
     cancelled.payment.paidAt = now;
     cancelled.payment.confirmedBy = "admin";
+    cancelled.payment.txnId = transactionId;
+    cancelled.payment.manualVerification = manualVerification;
     cancelled.payment.latePayment = true;
     cancelled.payment.latePaymentStatus = "refund_required";
     cancelled.refund = { source: "late_payment", reason: "Đã nhận tiền nhưng khung giờ không còn hợp lệ", status: "pending", suggestedAmount: cancelled.total, amount: null, dueAt: null };
@@ -152,6 +180,8 @@ async function confirmPaymentManual(orderId, adminId) {
       "payment.status": "paid",
       "payment.paidAt": now,
       "payment.confirmedBy": "admin",
+      "payment.txnId": transactionId,
+      "payment.manualVerification": manualVerification,
     },
     now,
   });
