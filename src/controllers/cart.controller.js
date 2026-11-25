@@ -72,9 +72,9 @@ async function buildValidatedCartItem(payload) {
 
   const resolvedKind = kind || product.kind || "cake";
   const imageId =
-    Array.isArray(product.images) && product.images.length > 0
-      ? product.images[0]
-      : product.imageId || null;
+    Array.isArray(product.imageIds) && product.imageIds.length > 0
+      ? product.imageIds[0]
+      : null;
 
   return {
     productId: product._id,

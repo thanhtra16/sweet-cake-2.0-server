@@ -5,6 +5,7 @@ const {
   getProducts,
   getProductFilters,
   getProductById,
+  getProductReviews,
   getProductCustomization,
 } = require("../controllers/products.controller");
 
@@ -16,6 +17,9 @@ router.get("/customization", getProductCustomization);
 
 // GET /api/products
 router.get("/", getProducts);
+
+// GET /api/products/:id/reviews 
+router.get("/:id/reviews", getProductReviews);
 
 // GET /api/products/:id
 router.get("/:id", getProductById);

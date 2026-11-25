@@ -16,7 +16,7 @@ const seedFAQs = require("./data/faqs.seed");
 const seedTimeSlots = require("./data/timeslots.seed");
 const seedOrders = require("./data/orders.seed");
 const seedNotifications = require("./data/notifications.seed");
-
+const seedReviews = require("./data/reviews.seed");
 
 const runSeed = async () => {
   try {
@@ -47,6 +47,7 @@ const runSeed = async () => {
     await seedFAQs();
     await seedTimeSlots();
     await seedOrders();
+    await seedReviews()
     await seedNotifications();
 
     console.log("\n========== SEED DATA HOÀN TẤT ==========\n");
