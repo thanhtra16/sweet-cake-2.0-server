@@ -11,13 +11,21 @@ const defaultProducts = [
     kind: "cake",
     category: "Bánh sinh nhật",
     occasions: ["Sinh nhật", "Kỷ niệm"],
-    description: "Bánh kem trang trí hoa tươi, phù hợp cho các dịp sinh nhật và kỷ niệm.",
+    description:
+      "Bánh kem trang trí hoa tươi, phù hợp cho các dịp sinh nhật và kỷ niệm.",
     basePrice: 350000,
     salePrice: null,
     status: "visible",
     featured: true,
     availableSizes: ["10cm", "14cm", "18cm", "22cm"],
-    availableFillings: ["Bắp", "Matcha", "Phô mai", "Trái cây tươi", "Socola", "Mứt dâu tây"],
+    availableFillings: [
+      "Bắp",
+      "Matcha",
+      "Phô mai",
+      "Trái cây tươi",
+      "Socola",
+      "Mứt dâu tây",
+    ],
   },
   {
     name: "Bánh kem socola",
@@ -63,7 +71,8 @@ const defaultProducts = [
     kind: "cake",
     category: "Bánh Bento",
     occasions: ["Sinh nhật", "Kỷ niệm", "Chúc mừng"],
-    description: "Bánh kem Bento kích thước nhỏ, phù hợp cho những dịp đặc biệt.",
+    description:
+      "Bánh kem Bento kích thước nhỏ, phù hợp cho những dịp đặc biệt.",
     basePrice: 150000,
     featured: false,
     availableSizes: ["10cm"],
@@ -74,7 +83,8 @@ const defaultProducts = [
     kind: "cake",
     category: "Bánh mousse",
     occasions: ["Sinh nhật"],
-    description: "Bánh mousse dâu tây mềm mịn, kết hợp vị ngọt dịu và trái cây tươi.",
+    description:
+      "Bánh mousse dâu tây mềm mịn, kết hợp vị ngọt dịu và trái cây tươi.",
     basePrice: 450000,
     featured: true,
     availableSizes: ["10cm", "14cm", "18cm", "22cm"],
@@ -147,7 +157,11 @@ const defaultProducts = [
     availableSizes: [],
     availableFillings: [],
     variants: [
-      { label: "Happy Birthday", attributes: { text: "Happy Birthday" }, active: true },
+      {
+        label: "Happy Birthday",
+        attributes: { text: "Happy Birthday" },
+        active: true,
+      },
       { label: "Love", attributes: { text: "Love" }, active: true },
     ],
   },
@@ -177,16 +191,35 @@ const defaultProducts = [
 // Sản phẩm nào không có ở đây sẽ được bỏ qua phần ảnh.
 const imageUrlsByProduct = {
   "Bánh kem sinh nhật hoa tươi": [
-    "https://plus.unsplash.com/premium_photo-1716918178842-d548932c80a7?q=80&w=1471&auto=format&fit=crop",
-    // Thêm URL khác của sản phẩm này tại đây
+    "https://plus.unsplash.com/premium_photo-1716918178842-d548932c80a7?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1717014573291-f26c91e2ca58?q=80&w=1422&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   ],
-  // "Bánh kem socola": ["https://..."],
-  // "Bánh kem trái cây": ["https://..."],
-  // "Bánh mousse matcha": ["https://..."],
-  // "Bánh Bento": ["https://..."],
-  // "Strawberry Mousse": ["https://..."],
-  // "Chocolate Truffle": ["https://..."],
-  // "White Lace Wedding": ["https://..."],
+  "Bánh kem socola": [
+    "https://plus.unsplash.com/premium_photo-1687969682937-c62c7f32ed56?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1687969682028-97e42a3c5539?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh kem trái cây": [
+    "https://plus.unsplash.com/premium_photo-1664472680005-b9976125009d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1663133733226-809790756153?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1663133720016-8c4766347a3e?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh mousse matcha": [
+    "https://images.unsplash.com/photo-1736195676924-162ed0fac50b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Bánh Bento": [
+    "https://images.unsplash.com/photo-1651307573144-a2e8df89bd6e?q=80&w=1548&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Strawberry Mousse": [
+    "https://plus.unsplash.com/premium_photo-1672192166785-bdf23cd39734?q=80&w=1548&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1672192166439-f20d9ec1dbbc?q=80&w=1548&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "Chocolate Truffle": [
+    "https://images.unsplash.com/photo-1605807646983-377bc5a76493?q=80&w=1448&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
+  "White Lace Wedding": [
+    "https://images.unsplash.com/photo-1629576690723-bb3a22ae7126?q=80&w=1554&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+    "https://images.unsplash.com/photo-1614878257906-91bdeb16c470?q=80&w=1574&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
+  ],
 };
 
 // Tải ảnh từ URL và upload vào GridFS (purpose = "product")
@@ -243,12 +276,12 @@ async function seedProductImages() {
         const id = await uploadImageFromUrl(
           url,
           product._id,
-          `${name}-${index + 1}.jpg`
+          `${name}-${index + 1}.jpg`,
         );
         newIds.push(id);
       } catch (error) {
         console.warn(
-          `Không tải được ảnh ${index + 1} của "${name}": ${error.message}`
+          `Không tải được ảnh ${index + 1} của "${name}": ${error.message}`,
         );
       }
     }
@@ -256,7 +289,7 @@ async function seedProductImages() {
     if (newIds.length > 0) {
       await Product.updateOne(
         { _id: product._id },
-        { $addToSet: { imageIds: { $each: newIds } } }
+        { $addToSet: { imageIds: { $each: newIds } } },
       );
       console.log(`Đã gắn ${newIds.length} ảnh cho "${name}"`);
     }
@@ -265,12 +298,8 @@ async function seedProductImages() {
 
 async function seedProducts() {
   const operations = defaultProducts.map((product) => {
-    const {
-      availableSizes,
-      availableFillings,
-      variants,
-      ...insertFields
-    } = product;
+    const { availableSizes, availableFillings, variants, ...insertFields } =
+      product;
 
     return {
       updateOne: {
@@ -298,7 +327,7 @@ async function seedProducts() {
 
     const total = await Product.countDocuments();
     console.log(
-      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`
+      `Seed Products thành công: đã kiểm tra ${defaultProducts.length} sản phẩm mẫu.`,
     );
     console.log(`Tổng số sản phẩm hiện có: ${total}`);
   } catch (error) {
