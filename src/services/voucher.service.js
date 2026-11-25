@@ -61,7 +61,7 @@ function evaluateVoucher(voucher, subtotal, { now = new Date() } = {}) {
 
 /** Tra voucher theo mã (mã không phân biệt hoa thường). */
 async function findVoucherByCode(code, deps = {}) {
-  const Voucher = deps.Voucher || require('../models/vouchers');
+  const Voucher = deps.Voucher || require('../models/voucher.model');
   const normalized = normalizeCode(code);
   if (!normalized) return null;
   return Voucher.findOne({ code: normalized }).lean();
@@ -73,7 +73,7 @@ async function findVoucherByCode(code, deps = {}) {
  * Việc hoàn lượt (kiểm tra order.voucher.restored) thuộc luồng hủy đơn, không nằm ở đây.
  */
 async function reserveVoucherUse(code, { now = new Date(), Voucher } = {}) {
-  const Model = Voucher || require('../models/vouchers');
+  const Model = Voucher || require('../models/voucher.model');
   return Model.findOneAndUpdate(
     {
       code: normalizeCode(code),

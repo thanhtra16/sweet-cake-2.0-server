@@ -2,8 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { auth, optionalAuth } = require("../middlewares/auth");
-
+const { auth } = require("../middlewares/auth");
 const {
   getNotifications,
   getUnreadCount,
@@ -11,12 +10,19 @@ const {
   markAllAsRead,
 } = require("../controllers/notification.controller");
 
-// Khách và người đăng nhập đều được xem thông báo
-router.get("/", optionalAuth, getNotifications);
+// Tất cả API thông báo đều yêu cầu đăng nhập
+router.use(auth);
 
-// Các thao tác bên dưới bắt buộc đăng nhập
-router.get("/unread-count", auth, getUnreadCount);
-router.patch("/read-all", auth, markAllAsRead);
-router.patch("/:id/read", auth, markAsRead);
+// Lấy danh sách thông báo
+router.get("/", getNotifications);
+
+// Đếm thông báo chưa đọc
+router.get("/unread-count", getUnreadCount);
+
+// Đánh dấu tất cả đã đọc
+router.patch("/read-all", markAllAsRead);
+
+// Đánh dấu một thông báo đã đọc
+router.patch("/:id/read", markAsRead);
 
 module.exports = router;

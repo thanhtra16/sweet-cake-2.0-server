@@ -2,10 +2,9 @@ const Customization = require("../../models/customizations");
 
 const defaultCustomizations = {
   sizes: [
-    { name: "10cm", priceDiff: 0, isDefault: true, active: true, maxChars: 30 },
-    { name: "14cm", priceDiff: 20000, isDefault: false, active: true, maxChars: 60 },
-    { name: "18cm", priceDiff: 40000, isDefault: false, active: true, maxChars: 100 },
-    { name: "22cm", priceDiff: 60000, isDefault: false, active: true, maxChars: 140 },
+    { name: "18cm", priceDiff: 0, isDefault: true, active: true },
+    { name: "20cm", priceDiff: 0, isDefault: false, active: true },
+    { name: "22cm", priceDiff: 0, isDefault: false, active: true },
   ],
 
   fillings: [
@@ -47,11 +46,10 @@ const defaultCustomizations = {
 };
 
 async function seedCustomizations() {
-  // Chưa có cấu hình thì tạo mới, đã có thì cập nhật theo dữ liệu mặc định
   const customization = await Customization.findOneAndUpdate(
     {},
     {
-      $set: defaultCustomizations,
+      $set: defaultCustomizations
     },
     {
       upsert: true,
@@ -60,10 +58,7 @@ async function seedCustomizations() {
     }
   );
 
-  console.log(
-    "Seed Customization thành công, cấu hình đã được đồng bộ:",
-    customization._id
-  );
+  console.log("Seed Customization thành công, cấu hình đã được đồng bộ:", customization._id)
 }
 
 module.exports = seedCustomizations;

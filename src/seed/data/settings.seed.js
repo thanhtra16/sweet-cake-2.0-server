@@ -2,23 +2,11 @@ const Setting = require("../../models/settings");
 
 const defaultSettings = {
   minLeadHours: 24,
-  maxAdvanceDays: 7,
-  deliveryFee: 30000, // Phí giao hàng mặc định (VNĐ)
+  maxAdvanceDays: 30,
+  deliveryFee: 0, // Giá trị tạm thời, cần thay bằng phí giao hàng thực tế
   deliveryCity: "TP.HCM",
 
-  // Danh sách chi nhánh SweetCake tại TP.HCM (địa chỉ 2 cấp: Phường/Xã - TP. Hồ Chí Minh)
-  branches: [
-    {
-      name: "SweetCake Thủ Đức",
-      address: "669 Đỗ Mười, Phường Linh Xuân, TP.HCM",
-      phone: "028 7300 1234",
-    },
-    {
-      name: "SweetCake Quận 1",
-      address: "45 Lê Lợi, Phường Bến Nghé, TP.HCM",
-      phone: "028 7300 5678",
-    },
-  ],
+  branches: [],
 
   // Khai báo các khung giờ nhận bánh mặc định
   slotTemplates: [
@@ -32,14 +20,21 @@ const defaultSettings = {
   workingHours: {},
   qrExpireMinutes: 10,
   maxQrRetries: 3,
-  hotline: "1900 1234",
+  hotline: "",
   refundPolicy: {
     acceptedPercent: 30,
     inProgressPercent: 0,
     shopFaultPercent: 100,
   },
   refundDueWorkingDays: 3,
+
+  qrExpireMinutes: 10,
+  maxQrRetries: 3,
+
+  hotline: "",
 };
+  
+
 
 async function seedSettings() {
   const setting = await Setting.findOneAndUpdate(

@@ -13,7 +13,6 @@ const Post = require("./posts");
 const FAQ = require("./faqs");
 const CustomRequest = require("./customrequests");
 const OTPCode = require("./OTPCode");
-const Media = require("./media");
 
 module.exports = {
   User,
@@ -30,5 +29,4 @@ module.exports = {
   FAQ,
   CustomRequest,
   OTPCode,
-  Media,
 };

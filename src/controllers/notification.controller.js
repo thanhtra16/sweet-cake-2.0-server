@@ -6,19 +6,13 @@ const {
   errorResponse,
 } = require("../utils/response");
 
-// GET /notifications
-// Khách xem thông báo chung; người đăng nhập xem thông báo chung + riêng
+// 1. GET /notifications
+// Lấy danh sách thông báo của người dùng đang đăng nhập
 const getNotifications = async (req, res, next) => {
   try {
-    const userId = req.user?._id;
-
-    const filter = userId
-      ? { $or: [{ userId: null }, { userId }] }
-      : { userId: null };
-
-    const notifications = await Notification.find(filter)
-      .sort({ createdAt: -1 })
-      .lean();
+    const notifications = await Notification.find({
+      userId: req.user._id,
+    }).sort({ createdAt: -1 });
 
     return successResponse(
       res,
@@ -30,22 +24,12 @@ const getNotifications = async (req, res, next) => {
   }
 };
 
-// GET /notifications/unread-count
+// 2. GET /notifications/unread-count
+// Đếm số thông báo chưa đọc
 const getUnreadCount = async (req, res, next) => {
   try {
-    const userId = req.user?._id;
-
-    // Khách không có thông báo riêng để đếm
-    if (!userId) {
-      return successResponse(
-        res,
-        { unreadCount: 0 },
-        "Lấy số thông báo chưa đọc thành công"
-      );
-    }
-
     const count = await Notification.countDocuments({
-      userId,
+      userId: req.user._id,
       read: false,
     });
 
@@ -59,15 +43,10 @@ const getUnreadCount = async (req, res, next) => {
   }
 };
 
-// PATCH /notifications/:id/read
+// 3. PATCH /notifications/:id/read
+// Đánh dấu một thông báo đã đọc
 const markAsRead = async (req, res, next) => {
   try {
-    const userId = req.user?._id;
-
-    if (!userId) {
-      return errorResponse(res, "Vui lòng đăng nhập", 401);
-    }
-
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -77,9 +56,9 @@ const markAsRead = async (req, res, next) => {
     const notification = await Notification.findOneAndUpdate(
       {
         _id: id,
-        userId,
+        userId: req.user._id,
       },
-      { $set: { read: true } },
+      { read: true },
       { new: true }
     );
 
@@ -97,18 +76,13 @@ const markAsRead = async (req, res, next) => {
   }
 };
 
-// PATCH /notifications/read-all
+// 4. PATCH /notifications/read-all
+// Đánh dấu tất cả thông báo đã đọc
 const markAllAsRead = async (req, res, next) => {
   try {
-    const userId = req.user?._id;
-
-    if (!userId) {
-      return errorResponse(res, "Vui lòng đăng nhập", 401);
-    }
-
     const result = await Notification.updateMany(
       {
-        userId,
+        userId: req.user._id,
         read: false,
       },
       { $set: { read: true } }
@@ -116,7 +90,9 @@ const markAllAsRead = async (req, res, next) => {
 
     return successResponse(
       res,
-      { modifiedCount: result.modifiedCount },
+      {
+        modifiedCount: result.modifiedCount,
+      },
       "Đánh dấu tất cả thông báo đã đọc thành công"
     );
   } catch (error) {
