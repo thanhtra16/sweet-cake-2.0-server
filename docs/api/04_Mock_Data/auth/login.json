@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "accessToken": "MOCK_BUYER_JWT_REPLACE_WITH_REAL_TOKEN",
+    "role": "buyer",
+    "user": {
+      "_id": "mock-user-001",
+      "fullName": "Nguyen Van A",
+      "phone": "0900000000"
+    }
+  }
+}

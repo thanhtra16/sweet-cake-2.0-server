@@ -1,4 +1,3 @@
-
 const { Notification } = require("../models");
 
 const notify = async ({

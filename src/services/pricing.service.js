@@ -128,12 +128,28 @@ function priceLine(line, product, customization) {
   const unitPrice = round(basePart + surcharges.reduce((s, x) => s + x.amount, 0));
   const priceChanged = Number.isFinite(line.unitPrice) && line.unitPrice !== unitPrice;
 
-  return {
-    valid: true, reason: null, field: null,
-    unitPrice, priceChanged,
+    return {
+    valid: true,
+    reason: null,
+    field: null,
+
+    // Thông tin bắt buộc để tạo Order
+    productId: product._id,
+    kind: product.kind,
+    name: product.name,
+    imageId: product.imageId || null,
+    qty: line.qty,
+
+    // Thông tin cấu hình sản phẩm
+    config: line.config || {},
+
+    // Thông tin giá
+    unitPrice,
+    priceChanged,
     basePrice: product.basePrice,
     salePrice: product.salePrice != null ? product.salePrice : null,
-    surcharges, variant,
+    surcharges,
+    variant,
     lineTotal: unitPrice * line.qty,
   };
 }
@@ -177,9 +193,9 @@ function computeQuote({ items, voucherCode, receiveMethod }, data) {
 
 /** Nạp dữ liệu từ MongoDB rồi tính. deps cho phép thay model khi kiểm thử. */
 async function quote(input, deps = {}) {
-  const Product = deps.Product || require('../models/product.model');
-  const Customization = deps.Customization || require('../models/customization.model');
-  const Settings = deps.Settings || require('../models/settings.model');
+  const Product = deps.Product || require('../models/products');
+  const Customization = deps.Customization || require('../models/customizations');
+  const Settings = deps.Settings || require('../models/settings');
 
   const ids = [...new Set((input.items || []).map((l) => String(l.productId)))];
   const [docs, customization, settings, voucher] = await Promise.all([

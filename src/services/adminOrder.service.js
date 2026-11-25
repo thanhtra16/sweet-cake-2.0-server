@@ -1,0 +1,369 @@
+const mongoose = require("mongoose");
+const { Order, Setting, TimeSlot } = require("../models");
+const AppError = require("../utils/AppError");
+const { transitionOrder } = require("./orderStatus.service");
+
+function ensureValidObjectId(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError(400, "INVALID_ORDER_ID", "ID đơn hàng không hợp lệ.");
+  }
+}
+
+// Gắn thêm cờ cảnh báo quá hạn hoàn tiền (> 3 ngày hoặc quá dueAt)
+function enrichOrderFlags(orderDoc) {
+  const order = orderDoc.toObject ? orderDoc.toObject() : { ...orderDoc };
+  const now = new Date();
+  const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+
+  let isRefundOverdue = false;
+  if (order.refund && order.refund.status === "pending") {
+    if (order.refund.dueAt) {
+      isRefundOverdue = now > new Date(order.refund.dueAt);
+    } else if (order.cancellation && order.cancellation.at) {
+      isRefundOverdue = now.getTime() - new Date(order.cancellation.at).getTime() > threeDaysMs;
+    } else if (order.updatedAt) {
+      isRefundOverdue = now.getTime() - new Date(order.updatedAt).getTime() > threeDaysMs;
+    }
+  }
+
+  return {
+    ...order,
+    isRefundOverdue,
+  };
+}
+
+async function getAdminOrders(query = {}) {
+  const { status, from, to, hasCancelRequest, refundOverdue, search, page = 1, limit = 15 } = query;
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 15));
+  const skip = (pageNum - 1) * limitNum;
+
+  const andConditions = [];
+
+  if (status) {
+    andConditions.push({ status });
+  }
+
+  if (hasCancelRequest === "true" || hasCancelRequest === true) {
+    andConditions.push({ "cancelRequest.status": "pending" });
+  }
+
+  if (refundOverdue === "true" || refundOverdue === true) {
+    const now = new Date();
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    andConditions.push({
+      "refund.status": "pending",
+      $or: [
+        { "refund.dueAt": { $lt: now } },
+        { "refund.dueAt": { $exists: false }, "cancellation.at": { $lt: threeDaysAgo } },
+        { "refund.dueAt": null, "cancellation.at": { $lt: threeDaysAgo } },
+      ],
+    });
+  }
+
+  if (from || to) {
+    const createdAtFilter = {};
+    if (from) createdAtFilter.$gte = new Date(from);
+    if (to) {
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      createdAtFilter.$lte = endDate;
+    }
+    andConditions.push({ createdAt: createdAtFilter });
+  }
+
+  if (search) {
+    const cleanSearch = String(search).trim();
+    andConditions.push({
+      $or: [
+        { code: new RegExp(cleanSearch, "i") },
+        { "receiver.fullName": new RegExp(cleanSearch, "i") },
+        { "receiver.phone": new RegExp(cleanSearch, "i") },
+      ],
+    });
+  }
+
+  const filter = andConditions.length > 0 ? { $and: andConditions } : {};
+
+  const [rawItems, total] = await Promise.all([
+    Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+    Order.countDocuments(filter),
+  ]);
+
+  return {
+    items: rawItems.map(enrichOrderFlags),
+    page: pageNum,
+    limit: limitNum,
+    total,
+  };
+}
+
+async function getAdminOrderById(orderId) {
+  ensureValidObjectId(orderId);
+  const order = await Order.findById(orderId).lean();
+  if (!order) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
+  }
+  return enrichOrderFlags(order);
+}
+
+async function confirmPaymentManual(orderId, adminId, { txnId, evidence, note = "" } = {}) {
+  ensureValidObjectId(orderId);
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
+  }
+
+  const now = new Date();
+  const transactionId = String(txnId || "").trim();
+  const hasEvidence = typeof evidence === "string"
+    ? evidence.trim().length > 0
+    : Array.isArray(evidence) ? evidence.length > 0
+    : Boolean(evidence && typeof evidence === "object");
+  if (!transactionId || !hasEvidence) {
+    throw new AppError(
+      400,
+      "PAYMENT_EVIDENCE_REQUIRED",
+      "Admin cần nhập mã giao dịch và cung cấp bằng chứng thanh toán trước khi xác nhận.",
+    );
+  }
+
+  const manualVerification = {
+    transactionId,
+    evidence,
+    note: String(note || "").trim(),
+    verifiedAt: now,
+    verifiedBy: adminId || null,
+  };
+  // Idempotent: không ghi nhận lại một giao dịch đã được Admin xác minh.
+  if (order.payment?.status === "paid") {
+    return enrichOrderFlags(order);
+  }
+  if (order.status === "cancelled") {
+    order.payment.status = "paid";
+    order.payment.paidAt = now;
+    order.payment.confirmedBy = "admin";
+    order.payment.txnId = transactionId;
+    order.payment.manualVerification = manualVerification;
+    order.payment.latePayment = true;
+    order.payment.latePaymentStatus = "refund_required";
+    order.refund = { source: "late_payment", reason: "Admin xác minh tiền đã nhận sau khi đơn bị hủy", status: "pending", suggestedAmount: order.total, amount: null, dueAt: null };
+    await order.save();
+    return enrichOrderFlags(order);
+  }
+  if (order.status !== "pending_payment") {
+    throw new AppError(409, "INVALID_STATUS", "Đơn hàng không ở trạng thái chờ thanh toán.");
+  }
+  const slot = await TimeSlot.findById(order.slotId).lean();
+  if (!slot || slot.closed || order.payment?.slotHeld !== true) {
+    const cancelled = await transitionOrder(order._id.toString(), "cancelled", {
+      actor: { type: "system", id: null },
+      reasonCode: "qr_retries_exceeded",
+      reason: "Khung giờ không còn được giữ hợp lệ khi Admin đối soát.",
+    });
+    cancelled.payment.status = "paid";
+    cancelled.payment.paidAt = now;
+    cancelled.payment.confirmedBy = "admin";
+    cancelled.payment.txnId = transactionId;
+    cancelled.payment.manualVerification = manualVerification;
+    cancelled.payment.latePayment = true;
+    cancelled.payment.latePaymentStatus = "refund_required";
+    cancelled.refund = { source: "late_payment", reason: "Đã nhận tiền nhưng khung giờ không còn hợp lệ", status: "pending", suggestedAmount: cancelled.total, amount: null, dueAt: null };
+    await cancelled.save();
+    return enrichOrderFlags(cancelled);
+  }
+
+  const updated = await transitionOrder(order._id.toString(), "pending_approval", {
+    actor: { type: "admin", id: adminId },
+    patch: {
+      "payment.status": "paid",
+      "payment.paidAt": now,
+      "payment.confirmedBy": "admin",
+      "payment.txnId": transactionId,
+      "payment.manualVerification": manualVerification,
+    },
+    now,
+  });
+
+  return enrichOrderFlags(updated);
+}
+
+async function acceptOrder(orderId, adminId) {
+  ensureValidObjectId(orderId);
+  const updated = await transitionOrder(orderId, "accepted", {
+    actor: { type: "admin", id: adminId },
+  });
+  return enrichOrderFlags(updated);
+}
+
+async function rejectOrCancelOrder(orderId, { reasonCode, reason, cause } = {}, adminId) {
+  ensureValidObjectId(orderId);
+  const order = await Order.findById(orderId).lean();
+  if (!order) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
+  }
+
+  if (order.cancelRequest && order.cancelRequest.status === "pending") {
+    throw new AppError(
+      409,
+      "CANCEL_REQUEST_PENDING",
+      "Đơn đang có yêu cầu hủy từ khách, vui lòng xử lý tại mục duyệt yêu cầu hủy."
+    );
+  }
+
+  const updated = await transitionOrder(orderId, "cancelled", {
+    actor: { type: "admin", id: adminId },
+    reasonCode: reasonCode || "other",
+    reason: reason || "",
+    cause: cause || "other",
+  });
+
+  return enrichOrderFlags(updated);
+}
+
+// 1. Admin duyệt hoặc từ chối yêu cầu hủy của khách (POST /cancel-request/decision)
+async function decideCancelRequest(orderId, { decision, decisionReason, cause } = {}, adminId) {
+  ensureValidObjectId(orderId);
+  if (!["accepted", "rejected"].includes(decision)) {
+    throw new AppError(400, "VALIDATION_ERROR", "Quyết định phải là 'accepted' hoặc 'rejected'.");
+  }
+
+  const order = await Order.findById(orderId).lean();
+  if (!order) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
+  }
+
+  if (!order.cancelRequest || order.cancelRequest.status !== "pending") {
+    throw new AppError(409, "NO_PENDING_CANCEL_REQUEST", "Đơn hàng không có yêu cầu hủy nào đang chờ duyệt.");
+  }
+
+  const now = new Date();
+  const cleanDecisionReason = String(decisionReason || "").trim();
+
+  if (decision === "rejected") {
+    if (!cleanDecisionReason) {
+      throw new AppError(400, "DECISION_REASON_REQUIRED", "Vui lòng nhập lý do từ chối yêu cầu hủy.");
+    }
+
+    const updated = await Order.findOneAndUpdate(
+      { _id: orderId, "cancelRequest.status": "pending" },
+      {
+        $set: {
+          "cancelRequest.status": "rejected",
+          "cancelRequest.decidedBy": adminId,
+          "cancelRequest.decidedAt": now,
+          "cancelRequest.decisionReason": cleanDecisionReason,
+        },
+      },
+      { new: true }
+    ).lean();
+
+    return enrichOrderFlags(updated);
+  }
+
+  // Trường hợp decision === "accepted": chuyển đơn sang cancelled & tự tính suggestedAmount theo refundPolicy
+  const updated = await transitionOrder(orderId, "cancelled", {
+    actor: { type: "admin", id: adminId },
+    reasonCode: order.cancelRequest.reasonCode || "other",
+    reason: cleanDecisionReason || order.cancelRequest.reason || "Chấp nhận yêu cầu hủy của khách",
+    cause: cause || "other",
+    via: "cancel_request",
+    patch: {
+      "cancelRequest.status": "accepted",
+      "cancelRequest.decidedBy": adminId,
+      "cancelRequest.decidedAt": now,
+      "cancelRequest.decisionReason": cleanDecisionReason || null,
+    },
+    now,
+  });
+
+  return enrichOrderFlags(updated);
+}
+
+// 2. Hủy đặc biệt từ phía cửa hàng - hoàn 100% (POST /special-cancel)
+async function specialCancelOrder(orderId, { reason, cause = "shop_fault" } = {}, adminId) {
+  ensureValidObjectId(orderId);
+  const cleanReason = String(reason || "").trim();
+  if (!cleanReason) {
+    throw new AppError(400, "CANCEL_REASON_REQUIRED", "Vui lòng nhập lý do hủy đặc biệt.");
+  }
+
+  const order = await Order.findById(orderId).lean();
+  if (!order) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
+  }
+
+  const now = new Date();
+  const patch = {};
+
+  if (order.cancelRequest && order.cancelRequest.status === "pending") {
+    patch["cancelRequest.status"] = "accepted";
+    patch["cancelRequest.decidedBy"] = adminId;
+    patch["cancelRequest.decidedAt"] = now;
+    patch["cancelRequest.decisionReason"] = cleanReason;
+  }
+
+  const updated = await transitionOrder(orderId, "cancelled", {
+    actor: { type: "admin", id: adminId },
+    reasonCode: "other",
+    reason: cleanReason,
+    cause, // 'shop_fault' kích hoạt hoàn 100% trong orderStatus.rules.js
+    patch,
+    now,
+  });
+
+  return enrichOrderFlags(updated);
+}
+
+// 3. Xác nhận hoàn tiền thủ công cho khách (POST /refund/confirm)
+async function confirmRefund(orderId, { amount, adjustReason } = {}, adminId) {
+  ensureValidObjectId(orderId);
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Không tìm thấy đơn hàng.");
+  }
+
+  if (!order.refund || order.refund.status !== "pending") {
+    throw new AppError(409, "NO_PENDING_REFUND", "Đơn hàng không có khoản hoàn tiền nào đang chờ xác nhận.");
+  }
+
+  const finalAmount = amount !== undefined && amount !== null ? Number(amount) : order.refund.suggestedAmount;
+  if (Number.isNaN(finalAmount) || finalAmount < 0 || finalAmount > order.total) {
+    throw new AppError(400, "INVALID_REFUND_AMOUNT", "Số tiền hoàn không hợp lệ.");
+  }
+
+  const cleanAdjustReason = String(adjustReason || "").trim();
+  if (finalAmount !== order.refund.suggestedAmount && !cleanAdjustReason) {
+    throw new AppError(
+      400,
+      "ADJUST_REASON_REQUIRED",
+      "Vui lòng nhập lý do điều chỉnh khi số tiền hoàn khác với mức đề xuất."
+    );
+  }
+
+  order.refund.status = "processed";
+  order.refund.amount = finalAmount;
+  order.refund.adjustReason = cleanAdjustReason || null;
+  order.refund.processedAt = new Date();
+  order.refund.processedBy = adminId;
+
+  if (order.payment && order.payment.status === "paid") {
+    order.payment.status = "refunded";
+    if (order.payment.latePayment) order.payment.latePaymentStatus = "refunded";
+  }
+
+  await order.save();
+  return enrichOrderFlags(order);
+}
+
+module.exports = {
+  getAdminOrders,
+  getAdminOrderById,
+  confirmPaymentManual,
+  acceptOrder,
+  rejectOrCancelOrder,
+  decideCancelRequest,
+  specialCancelOrder,
+  confirmRefund,
+};
