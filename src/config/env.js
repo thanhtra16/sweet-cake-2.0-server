@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -19,8 +19,7 @@ module.exports = {
   PORT,
   MONGODB_URI,
   NODE_ENV,
-  JWT_SECRET, 
+  JWT_SECRET,
   JWT_EXPIRES_IN,
   TRACK_TOKEN_EXPIRES_IN,
 };
-
