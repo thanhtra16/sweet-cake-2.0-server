@@ -21,6 +21,7 @@ const orderRoutes = require("./order.routes");
 const cartRoutes = require("./cart.routes");
 const reviewRoutes = require("./review.routes");
 const adminReviewRoutes = require("./adminReview.routes");
+const adminTimeSlotController = require("../controllers/admin-time-slot.controller");
 
 // API kiểm tra server
 router.use("/", healthRoutes);
@@ -47,10 +48,12 @@ router.use("/admin/products", adminProductsRoutes);
 router.use("/admin/reviews", adminReviewRoutes);
 
 // Public checkout settings
+router.get("/time-slots", adminTimeSlotController.list);
 router.get("/settings/public", async (req, res, next) => {
   try {
     const mongoose = require("mongoose");
-    const Setting = mongoose.models.Setting || mongoose.models.StoreSetting || null;
+    const Setting =
+      mongoose.models.Setting || mongoose.models.StoreSetting || null;
     const Branch = mongoose.models.Branch || null;
 
     const DEFAULT_BRANCHES = [
@@ -64,7 +67,9 @@ router.get("/settings/public", async (req, res, next) => {
     ];
 
     const setting = Setting ? await Setting.findOne().lean() : null;
-    const branches = Branch ? await Branch.find({ isActive: { $ne: false } }).lean() : DEFAULT_BRANCHES;
+    const branches = Branch
+      ? await Branch.find({ isActive: { $ne: false } }).lean()
+      : DEFAULT_BRANCHES;
 
     res.json({
       success: true,
