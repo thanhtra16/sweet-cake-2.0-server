@@ -126,6 +126,64 @@ function normalizeOrderItems(items = []) {
   });
 }
 
+function resolveShippingAddress(rawAddress) {
+  if (!rawAddress) return "";
+
+  if (typeof rawAddress === "string") {
+    return rawAddress.trim();
+  }
+
+  if (typeof rawAddress === "object") {
+    const parts = [
+      rawAddress.street,
+      rawAddress.ward,
+      rawAddress.district,
+      rawAddress.city,
+    ]
+      .map((p) => String(p || "").trim())
+      .filter(Boolean);
+    return parts.join(", ");
+  }
+
+  return "";
+}
+
+async function resolvePickupBranchId(rawBranch) {
+  if (!rawBranch) return null;
+
+  const branchValue =
+    typeof rawBranch === "object"
+      ? String(rawBranch._id || rawBranch.id || rawBranch.name || "").trim()
+      : String(rawBranch).trim();
+
+  if (!branchValue) return null;
+
+  if (mongoose.Types.ObjectId.isValid(branchValue)) {
+    return new mongoose.Types.ObjectId(branchValue);
+  }
+
+  const BranchModel =
+    mongoose.models.Branch ||
+    mongoose.model(
+      "Branch",
+      new mongoose.Schema(
+        {
+          name: { type: String, required: true },
+          address: { type: String, default: "" },
+          active: { type: Boolean, default: true },
+        },
+        { timestamps: true },
+      ),
+    );
+
+  let branchDoc = await BranchModel.findOne({ name: branchValue });
+  if (!branchDoc) {
+    branchDoc = await BranchModel.create({ name: branchValue });
+  }
+
+  return branchDoc._id;
+}
+
 /**
  * Kiểm tra quyền truy cập đơn hàng.
  *
@@ -185,7 +243,6 @@ async function assertCustomerOrderAccess(
  * - Giữ slot bằng atomic update.
  * - Reserve voucher nếu có.
  * - Tạo Order trong cùng MongoDB Transaction.
- * - Chưa tạo QR vì Payment Service chưa được triển khai.
  */
 async function createOrder(payload = {}, authContext = {}) {
   const {
@@ -194,6 +251,8 @@ async function createOrder(payload = {}, authContext = {}) {
     receiveMethod,
     receiver,
     shippingAddress,
+    deliveryAddress,
+    address,
     pickupBranch,
     receiveDate,
     slotId,
@@ -235,7 +294,11 @@ async function createOrder(payload = {}, authContext = {}) {
     );
   }
 
-  if (receiveMethod === "delivery" && !shippingAddress) {
+  const normalizedShippingAddress = resolveShippingAddress(
+    shippingAddress ?? deliveryAddress ?? address,
+  );
+
+  if (receiveMethod === "delivery" && !normalizedShippingAddress) {
     throw new AppError(
       400,
       "MISSING_SHIPPING_ADDRESS",
@@ -243,12 +306,16 @@ async function createOrder(payload = {}, authContext = {}) {
     );
   }
 
-  if (receiveMethod === "pickup" && !pickupBranch) {
-    throw new AppError(
-      400,
-      "MISSING_PICKUP_BRANCH",
-      "Vui lòng chọn chi nhánh nhận bánh.",
-    );
+  let resolvedPickupBranch = null;
+  if (receiveMethod === "pickup") {
+    resolvedPickupBranch = await resolvePickupBranchId(pickupBranch);
+    if (!resolvedPickupBranch) {
+      throw new AppError(
+        400,
+        "MISSING_PICKUP_BRANCH",
+        "Vui lòng chọn chi nhánh nhận bánh.",
+      );
+    }
   }
 
   if (!mongoose.Types.ObjectId.isValid(slotId)) {
@@ -444,9 +511,10 @@ async function createOrder(payload = {}, authContext = {}) {
 
         receiveMethod,
         shippingAddress:
-          receiveMethod === "delivery" ? shippingAddress : undefined,
+          receiveMethod === "delivery" ? normalizedShippingAddress : undefined,
 
-        pickupBranch: receiveMethod === "pickup" ? pickupBranch : null,
+        pickupBranch:
+          receiveMethod === "pickup" ? resolvedPickupBranch : null,
 
         receiveDate: new Date(receiveDate),
         slotId: slot._id,
