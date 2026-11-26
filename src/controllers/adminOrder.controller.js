@@ -27,7 +27,7 @@ async function getOrderById(req, res, next) {
 async function confirmPayment(req, res, next) {
   try {
     const adminId = req.user ? req.user._id : null;
-    const order = await adminOrderService.confirmPaymentManual(req.params.id, adminId);
+    const order = await adminOrderService.confirmPaymentManual(req.params.id, adminId, req.body || {});
     return res.status(200).json(order);
   } catch (err) {
     return next(err);

@@ -99,7 +99,7 @@ const paymentAttemptSchema = new mongoose.Schema({
   deadlineAt: { type: Date, default: null },
   result: {
     type: String,
-    enum: ["pending", "success", "failed", "expired"],
+    enum: ["pending", "success", "failed", "expired", "late"],
     default: "pending",
   },
 });
@@ -283,6 +283,13 @@ const orderSchema = new mongoose.Schema(
       latePayment: { type: Boolean, default: false },
       recreateCount: { type: Number, default: 0 },
       latePaymentStatus: { type: String, enum: ["none", "refund_required", "refund_pending", "refunded"], default: "none" },
+      manualVerification: {
+        transactionId: { type: String, default: null },
+        evidence: { type: mongoose.Schema.Types.Mixed, default: null },
+        note: { type: String, default: "" },
+        verifiedAt: { type: Date, default: null },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      },
     },
 
     productionTicket: {
